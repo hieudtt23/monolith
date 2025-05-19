@@ -1,4 +1,4 @@
-package com.danghieu99.monolith.email.validate;
+package com.danghieu99.monolith.common.validate;
 
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;

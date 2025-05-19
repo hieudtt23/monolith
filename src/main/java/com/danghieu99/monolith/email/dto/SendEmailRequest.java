@@ -1,7 +1,7 @@
 package com.danghieu99.monolith.email.dto;
 
 import com.danghieu99.monolith.common.dto.BaseRequest;
-import com.danghieu99.monolith.email.validate.ValidMultipartFile;
+import com.danghieu99.monolith.common.validate.ValidMultipartFile;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
