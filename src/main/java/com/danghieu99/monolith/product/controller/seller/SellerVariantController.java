@@ -22,18 +22,14 @@ public class SellerVariantController {
     private final SellerProductService sellerProductService;
 
     @GetMapping("")
-    public Page<VariantDetailsResponse> getVariantsByProductUUID(@RequestParam @NotBlank String productUUID, @RequestParam @PageableDefault Pageable pageable) {
+    public Page<VariantDetailsResponse> getVariantsByProductUUID(@RequestParam @NotBlank String productUUID,
+                                                                 @RequestParam @PageableDefault Pageable pageable) {
         return sellerProductService.getVariantsByProductUUID(productUUID, pageable);
     }
 
-    @PostMapping("")
-    public ResponseEntity<?> addVariant(@RequestParam @NotNull SaveVariantRequest request) {
-        sellerProductService.saveVariant(request);
-        return ResponseEntity.ok().build();
-    }
-
     @PatchMapping("")
-    public ResponseEntity<?> updateVariantPriceStockByUUID(@RequestParam @NotBlank String uuid, @RequestParam @NotNull SaveVariantRequest request) {
+    public ResponseEntity<?> updateVariantPriceStockByUUID(@RequestParam @NotBlank String uuid,
+                                                           @RequestParam @NotNull SaveVariantRequest request) {
         sellerProductService.updateVariantPriceStockByUUID(uuid, request);
         return ResponseEntity.ok().build();
     }

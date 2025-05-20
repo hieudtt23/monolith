@@ -8,7 +8,7 @@ import lombok.Data;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
-import java.util.Set;
+import java.util.List;
 
 @Data
 @Builder
@@ -21,13 +21,13 @@ public class SaveProductRequest {
     private final String description;
 
     @NotBlank
-    private final Set<String> categories;
+    private final List<String> categories;
 
     @NotNull
     private final BigDecimal price;
 
     @NotEmpty
-    private final Set<SaveVariantRequest> variants;
+    private final List<SaveVariantRequest> variants;
 
-    private final Set<MultipartFile> imgFiles;
+    private final List<MultipartFile> images;
 }

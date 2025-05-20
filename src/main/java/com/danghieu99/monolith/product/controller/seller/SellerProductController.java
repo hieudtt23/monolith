@@ -1,9 +1,7 @@
 package com.danghieu99.monolith.product.controller.seller;
 
 import com.danghieu99.monolith.product.dto.request.SaveProductRequest;
-import com.danghieu99.monolith.product.dto.request.SaveVariantRequest;
 import com.danghieu99.monolith.product.dto.request.UpdateProductDetailsRequest;
-import com.danghieu99.monolith.product.dto.response.VariantDetailsResponse;
 import com.danghieu99.monolith.product.dto.response.ProductDetailsResponse;
 import com.danghieu99.monolith.product.service.product.SellerProductService;
 import com.danghieu99.monolith.security.config.auth.UserDetailsImpl;
@@ -35,7 +33,7 @@ public class SellerProductController {
     @PostMapping("")
     public ResponseEntity<?> addToCurrentShop(@AuthenticationPrincipal @NotNull UserDetailsImpl userDetails,
                                               @RequestBody @NotNull SaveProductRequest request) {
-        sellerProductService.addToCurrentShop(userDetails, request);
+        sellerProductService.saveProductToCurrentShop(userDetails, request);
         return ResponseEntity.ok().build();
     }
 

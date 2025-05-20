@@ -17,5 +17,5 @@ import lombok.*;
 public class Image extends BaseEntity {
 
     @Column(nullable = false)
-    private String objectName;
+    private String url;
 }

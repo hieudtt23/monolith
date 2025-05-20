@@ -6,6 +6,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import lombok.*;
 
+import java.util.UUID;
+
 @Entity
 @Table(name = "product_images")
 @Getter
@@ -17,8 +19,8 @@ import lombok.*;
 public class ProductImage extends BaseEntity {
 
     @Column(nullable = false)
-    private int productId;
+    private UUID productUUID;
 
     @Column(nullable = false)
-    private int imageId;
+    private UUID imageUUID;
 }
