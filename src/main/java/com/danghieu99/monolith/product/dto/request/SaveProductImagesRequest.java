@@ -7,25 +7,15 @@ import lombok.Builder;
 import lombok.Data;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 @Data
 @Builder
-public class SaveProductRequest {
+public class SaveProductImagesRequest {
 
     @NotBlank
-    private final String name;
-
-    @NotBlank
-    private final String description;
-
-    @NotBlank
-    private final List<String> categories;
-
-    @NotNull
-    private final BigDecimal price;
+    private final String productUUID;
 
     @NotEmpty
-    private final List<SaveVariantRequest> variants;
+    private final List<@NotNull MultipartFile> imgFiles;
 }

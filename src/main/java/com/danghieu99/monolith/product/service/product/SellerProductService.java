@@ -12,23 +12,17 @@ import com.danghieu99.monolith.product.mapper.ProductMapper;
 import com.danghieu99.monolith.product.mapper.VariantMapper;
 import com.danghieu99.monolith.product.repository.jpa.*;
 import com.danghieu99.monolith.product.repository.jpa.join.*;
-import com.danghieu99.monolith.product.service.image.CloudinaryImageService;
 import com.danghieu99.monolith.security.config.auth.UserDetailsImpl;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
 
 @Service
 @RequiredArgsConstructor
@@ -45,10 +39,6 @@ public class SellerProductService {
     private final ShopRepository shopRepository;
     private final CategoryRepository categoryRepository;
     private final AttributeRepository attributeRepository;
-    private final ImageRepository imageRepository;
-    private final ProductImageRepository productImageRepository;
-    private final VariantImageRepository variantImageRepository;
-    private final CloudinaryImageService cloudinaryImageService;
 
     public Page<ProductDetailsResponse> getAllByCurrentShop(@NotNull UserDetailsImpl userDetails,
                                                             @NotNull Pageable pageable) {
@@ -62,33 +52,22 @@ public class SellerProductService {
         Set<ProductCategory> productCategories = new HashSet<>();
 
         Product newProduct = productMapper.toProduct(request);
-        var savedProduct = productRepository.saveAndFlush(newProduct);
-        var imageUploads = this.uploadImages(request.getImages());
-        Shop shop = shopRepository.findByAccountUUID(userDetails.getUuid())
-                .orElseThrow(() -> new ResourceNotFoundException("Shop", "accountId", userDetails.getUuid()));
+        var savedProduct = productRepository.save(newProduct);
+        int shopId = shopRepository.findShopIdByAccountUUID(userDetails.getUuid())
+                .orElseThrow(() -> new ResourceNotFoundException("Shop id", "accountUUID", userDetails.getUuid()));
         ProductShop productShop = ProductShop.builder()
                 .productId(savedProduct.getId())
-                .shopId(shop.getId())
+                .shopId(shopId)
                 .build();
-        productShopRepository.saveAndFlush(productShop);
+        productShopRepository.save(productShop);
         request.getCategories()
                 .forEach(category -> productCategories.add(ProductCategory.builder()
-                        .categoryId(categoryRepository.findByName(category.trim())
-                                .orElseThrow(() -> new ResourceNotFoundException("Category", "name", category.trim()))
-                                .getId())
+                        .categoryId(categoryRepository.findCategoryIdByName(category.trim())
+                                .orElseThrow(() -> new ResourceNotFoundException("Category id", "name", category.trim())))
                         .productId(savedProduct.getId())
                         .build()));
-        productCategoryRepository.saveAllAndFlush(productCategories);
+        productCategoryRepository.saveAll(productCategories);
         this.saveVariantsByProductId(savedProduct.getId(), request.getVariants());
-
-        List<Image> images = imageUploads.join();
-        List<Image> savedImages = imageRepository.saveAllAndFlush(images);
-        Set<ProductImage> productImages = new HashSet<>(savedImages.stream().map(image -> ProductImage.builder()
-                        .productUUID(savedProduct.getUuid())
-                        .imageUUID(image.getUuid())
-                        .build())
-                .toList());
-        productImageRepository.saveAllAndFlush(productImages);
     }
 
     @Transactional
@@ -135,35 +114,32 @@ public class SellerProductService {
     @Transactional
     public void saveVariantsByProductId(@NotNull int productId, List<SaveVariantRequest> request) {
         List<VariantAttribute> variantAttributes = new ArrayList<>();
-        List<VariantImage> variantImages = new ArrayList<>();
+        List<Variant> variants = new ArrayList<>();
+        List<Attribute> attributes = new ArrayList<>();
+
         request.forEach(requestVariant -> {
-            var imageUploads = this.uploadImages(requestVariant.getImages());
             var variant = variantMapper.toVariant(requestVariant);
             variant.setProductId(productId);
             variant.setPrice(requestVariant.getPrice());
             variant.setStock(requestVariant.getStock());
-            Variant savedVariant = variantRepository.saveAndFlush(variant);
+            variants.add(variant);
             requestVariant.getAttributes().forEach((key, value) -> {
-                var savedAttribute = attributeRepository.saveAndFlush(Attribute.builder()
+                attributes.add(Attribute.builder()
                         .type(key)
                         .value(value)
                         .build());
-                variantAttributes.add(VariantAttribute.builder()
-                        .variantId(savedVariant.getId())
-                        .attributeId(savedAttribute.getId())
-                        .attributeType(savedAttribute.getType())
-                        .build());
-                List<Image> images = imageUploads.join();
-                List<Image> savedImages = imageRepository.saveAllAndFlush(images);
-                variantImages.addAll(savedImages.stream().map(image -> VariantImage.builder()
-                                .variantId(savedVariant.getId())
-                                .imageUUID(image.getUuid())
-                                .build())
-                        .toList());
             });
         });
+        variantRepository.saveAll(variants);
+        List<Attribute> savedAttributes = attributeRepository.saveAll(attributes);
+        savedAttributes.forEach(attribute -> {
+            variantAttributes.add(VariantAttribute.builder()
+                    .variantId(attribute.getId())
+                    .attributeId(attribute.getId())
+                    .attributeType(attribute.getType())
+                    .build());
+        });
         variantAttributeRepository.saveAll(variantAttributes);
-        variantImageRepository.saveAll(variantImages);
     }
 
     @Transactional
@@ -173,35 +149,21 @@ public class SellerProductService {
     }
 
     @Transactional
-    public void deleteAttributeByProductUUIDTypeValue(String productUUID, String type, String value) {
-        var attribute = attributeRepository
-                .findByProductUUIDAttributeTypeValueContainsIgnoreCase(UUID.fromString(productUUID), type, value)
-                .orElseThrow(() -> new ResourceNotFoundException("Attribute", "productUUID", productUUID));
-        attributeRepository.deleteByUuid(attribute.getUuid());
-        variantAttributeRepository.deleteByProductUUID(UUID.fromString(productUUID));
+    public void deleteAttributeByProductUUIDTypeValue(String productUUID,
+                                                      String type,
+                                                      String value) {
+        UUID uuid = UUID.fromString(productUUID);
+        var attributeUUID = attributeRepository
+                .findByProductUUIDAttributeTypeValueContainsIgnoreCase(uuid, type, value)
+                .orElseThrow(() -> new ResourceNotFoundException("Attribute", "productUUID", productUUID))
+                .getUuid();
+        attributeRepository.deleteByUuid(attributeUUID);
+        variantAttributeRepository.deleteByAttributeUUID(attributeUUID);
     }
 
     @Transactional
     public void deleteAttributeByUUID(@NotBlank String attributeUUID) {
         attributeRepository.deleteByUuid(UUID.fromString(attributeUUID));
         variantAttributeRepository.deleteByAttributeUUID(UUID.fromString(attributeUUID));
-    }
-
-    @Async
-    @Transactional
-    protected CompletableFuture<List<Image>> uploadImages(@NotEmpty List<MultipartFile> files) {
-        List<Image> images = new ArrayList<>();
-        files.forEach(file -> {
-            try {
-                String url = cloudinaryImageService.uploadImage(file);
-                log.info("Image: {} uploaded successfully", file.getName());
-                images.add(Image.builder()
-                        .url(url)
-                        .build());
-            } catch (IOException e) {
-                log.error("Error uploading image", e);
-            }
-        });
-        return CompletableFuture.completedFuture(images);
     }
 }

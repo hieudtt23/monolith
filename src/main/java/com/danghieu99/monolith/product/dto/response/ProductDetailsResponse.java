@@ -1,6 +1,8 @@
 package com.danghieu99.monolith.product.dto.response;
 
+import com.danghieu99.monolith.product.constant.EProductStatus;
 import com.danghieu99.monolith.product.entity.*;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
@@ -13,20 +15,26 @@ import java.util.*;
 public class ProductDetailsResponse {
 
     @NotNull
-    private UUID uuid;
+    private String uuid;
 
-    @NotEmpty
+    @NotBlank
     private String name;
 
-    @NotEmpty
+    @NotBlank
     private String description;
 
-    @NotEmpty
-    private Set<Category> categories;
+    @NotNull
+    private EProductStatus status;
 
     @NotNull
     private Shop shop;
 
     @NotEmpty
-    private Set<VariantDetailsResponse> variants;
+    private List<@NotNull Category> categories;
+
+    @NotEmpty
+    private List<@NotNull VariantDetailsResponse> variants;
+
+    @NotEmpty
+    private List<@NotBlank String> imageUrls;
 }

@@ -1,8 +1,10 @@
 package com.danghieu99.monolith.product.controller.seller;
 
+import com.danghieu99.monolith.product.dto.request.SaveProductImagesRequest;
 import com.danghieu99.monolith.product.dto.request.SaveProductRequest;
 import com.danghieu99.monolith.product.dto.request.UpdateProductDetailsRequest;
 import com.danghieu99.monolith.product.dto.response.ProductDetailsResponse;
+import com.danghieu99.monolith.product.service.product.SellerProductImageService;
 import com.danghieu99.monolith.product.service.product.SellerProductService;
 import com.danghieu99.monolith.security.config.auth.UserDetailsImpl;
 import jakarta.validation.constraints.NotBlank;
@@ -23,6 +25,7 @@ import org.springframework.web.bind.annotation.*;
 public class SellerProductController {
 
     private final SellerProductService sellerProductService;
+    private final SellerProductImageService sellerProductImageService;
 
     @GetMapping("")
     public Page<ProductDetailsResponse> getAllByCurrentShop(@AuthenticationPrincipal @NotNull UserDetailsImpl userDetails,
@@ -46,6 +49,12 @@ public class SellerProductController {
     @DeleteMapping("")
     public ResponseEntity<?> deleteProductByUUID(@RequestParam @NotBlank String uuid) {
         sellerProductService.deleteProductByUUID(uuid);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/image/upload")
+    public ResponseEntity<?> saveProductImages(@RequestBody SaveProductImagesRequest request) {
+        sellerProductImageService.save(request);
         return ResponseEntity.ok().build();
     }
 }

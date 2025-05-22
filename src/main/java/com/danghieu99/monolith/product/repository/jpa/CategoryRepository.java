@@ -25,7 +25,18 @@ public interface CategoryRepository extends JpaRepository<Category, Integer> {
     @Query("select c from Category c where c.name like concat('%', :name, '%')")
     Page<Category> findByNameContaining(final String name, final Pageable pageable);
 
-    @Query("select c from Category c join ProductCategory pc on c.id = pc.categoryId join Product p on pc.productId = p.id " +
+    @Query("select c.id from Category c " +
+            "where c.name = :name")
+    Optional<Integer> findCategoryIdByName(String name);
+
+    @Query("select c from Category c " +
+            "join ProductCategory pc on c.id = pc.categoryId " +
+            "join Product p on pc.productId = p.id " +
             "where p.uuid = :uuid")
-    Set<Category> findByProductUUID(UUID productUUID);
+    List<Category> findByProductUUID(UUID productUUID);
+
+    @Query("select c from Category c " +
+            "join ProductCategory pc on c.id = pc.categoryId " +
+            "where pc.productId = :productId")
+    List<Category> findByProductId(int productId);
 }

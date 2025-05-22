@@ -26,6 +26,16 @@ public interface AttributeRepository extends JpaRepository<Attribute, Integer> {
             "and a.value like concat('%', lower(:value), '%')")
     Optional<Attribute> findByProductUUIDAttributeTypeValueContainsIgnoreCase(UUID productUUID, String type, String value);
 
+    @Transactional
+    @Modifying
+    @Query("delete from Attribute a " +
+            "where a.id = (select a.id from Attribute a " +
+            "join Product p on p.id = a.productId " +
+            "where p.uuid = :productUUID " +
+            "and a.type like concat('%', lower(:type), '%'))" +
+            "and a.value like concat('%', lower(:value), '%')")
+    void deleteByProductUUIDAttributeTypeValueContainsIgnoreCase(UUID productUUID, String type, String value);
+
     void deleteByUuid(UUID uuid);
 
     @Transactional
