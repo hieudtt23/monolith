@@ -1,15 +1,19 @@
 package com.danghieu99.monolith.product.service.product;
 
-import com.danghieu99.monolith.product.dto.request.SaveProductImagesRequest;
 import com.danghieu99.monolith.product.entity.jpa.Image;
+import com.danghieu99.monolith.product.entity.jpa.join.ProductImage;
 import com.danghieu99.monolith.product.repository.jpa.ImageRepository;
 import com.danghieu99.monolith.product.repository.jpa.join.ProductImageRepository;
 import com.danghieu99.monolith.product.service.image.ImageService;
 import jakarta.transaction.Transactional;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.*;
@@ -31,21 +35,28 @@ public class SellerProductImageService {
     }
 
     @Transactional
-    public void save(@NotNull SaveProductImagesRequest request) {
+    public void save(@NotBlank final String productUUID,
+                     @NotEmpty @Size(max = 10) final List<@NotNull MultipartFile> imgFiles) {
         List<Image> images = new ArrayList<>();
-        request.getImgFiles().forEach(file -> {
+        List<ProductImage> productImages = new ArrayList<>();
+        imgFiles.forEach(file -> {
             try {
-                String token = request.getProductUUID() + UUID.randomUUID();
+                String token = "product-image_" + UUID.randomUUID();
                 imageService.upload(token, file);
                 images.add(Image.builder()
                         .token(token)
                         .build());
+                productImages.add(ProductImage.builder()
+                        .imageToken(token)
+                        .productUUID(UUID.fromString(productUUID))
+                        .build());
             } catch (IOException e) {
-                log.error("ProductUUID: {}, file: {} upload failed", request.getProductUUID(), file.getName(), e);
+                log.error("ProductUUID: {}, file: {} upload failed", productUUID, file.getName(), e);
             }
         });
-        if (!images.isEmpty()) {
+        if (!images.isEmpty() && !productImages.isEmpty()) {
             imageRepository.saveAll(images);
+            productImageRepository.saveAll(productImages);
         }
     }
 

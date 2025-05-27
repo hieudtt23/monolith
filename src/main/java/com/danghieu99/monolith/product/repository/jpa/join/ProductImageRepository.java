@@ -22,16 +22,16 @@ public interface ProductImageRepository extends JpaRepository<ProductImage, Inte
     @Transactional
     @Query("update ProductImage pi " +
             "set pi.role = :role " +
-            "where pi.imageUUID = " +
-            "(select i.uuid from Image i " +
+            "where pi.imageToken = " +
+            "(select i.token from Image i " +
             "where i.token = :token)")
     void updateRoleByImageToken(String token, String role);
 
     @Modifying
     @Transactional
     @Query("delete from ProductImage pi " +
-            "where pi.imageUUID = " +
-            "(select i.uuid from Image i " +
+            "where pi.imageToken = " +
+            "(select i.token from Image i " +
             "where i.token = :token)")
     void deleteByImageToken(String token);
 }

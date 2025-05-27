@@ -21,7 +21,7 @@ public class ProductImage extends BaseEntity {
     private UUID productUUID;
 
     @Column(nullable = false)
-    private UUID imageUUID;
+    private String imageToken;
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)

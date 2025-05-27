@@ -3,12 +3,15 @@ package com.danghieu99.monolith.product.service.image;
 import com.cloudinary.Cloudinary;
 import com.cloudinary.Transformation;
 import com.cloudinary.utils.ObjectUtils;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
 
@@ -22,9 +25,8 @@ public class CloudinaryImageService implements ImageService {
         this.cloudinary = cloudinary;
     }
 
-    @Async
     @Override
-    public void upload(String token, MultipartFile file) throws IOException {
+    public void upload(@NotBlank final String token, @NotNull MultipartFile file) throws IOException {
         try {
             cloudinary.uploader().upload(file.getBytes(), ObjectUtils.asMap(
                     "public_id", token,

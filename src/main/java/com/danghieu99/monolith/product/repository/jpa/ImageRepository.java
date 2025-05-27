@@ -16,12 +16,12 @@ import java.util.UUID;
 public interface ImageRepository extends JpaRepository<Image, Integer> {
 
     @Query("select i from Image i " +
-            "join ProductImage pi on pi.imageUUID = i.uuid " +
+            "join ProductImage pi on pi.imageToken = i.token " +
             "where pi.productUUID = :productUUID")
     List<Image> findByProductUUID(UUID productUUID);
 
     @Query("select i from Image i " +
-            "join ProductImage pi on pi.imageUUID = i.uuid " +
+            "join ProductImage pi on pi.imageToken = i.token " +
             "where pi.productUUID = :productUUID and pi.role = :role")
     Optional<Image> findByProductUUIDAndRole(UUID productUUID, EImageRole role);
 
@@ -30,8 +30,8 @@ public interface ImageRepository extends JpaRepository<Image, Integer> {
     @Transactional
     @Modifying
     @Query("delete from Image i " +
-            "where i.uuid = " +
-            "(select pi.imageUUID from ProductImage pi " +
+            "where i.token = " +
+            "(select pi.imageToken from ProductImage pi " +
             "where pi.productUUID = :uuid)")
     void deleteByProductUUID(UUID uuid);
 }
