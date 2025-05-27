@@ -1,4 +1,4 @@
-package com.danghieu99.monolith.product.entity;
+package com.danghieu99.monolith.product.entity.jpa;
 
 import com.danghieu99.monolith.common.entity.BaseEntity;
 import com.danghieu99.monolith.product.constant.EShopStatus;

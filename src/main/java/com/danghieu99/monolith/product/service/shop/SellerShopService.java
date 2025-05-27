@@ -4,7 +4,7 @@ import com.danghieu99.monolith.common.exception.ResourceNotFoundException;
 import com.danghieu99.monolith.product.dto.request.SaveShopRequest;
 import com.danghieu99.monolith.product.dto.request.UpdateShopDetailsRequest;
 import com.danghieu99.monolith.product.dto.response.ShopDetailsResponse;
-import com.danghieu99.monolith.product.entity.Shop;
+import com.danghieu99.monolith.product.entity.jpa.Shop;
 import com.danghieu99.monolith.product.mapper.ShopMapper;
 import com.danghieu99.monolith.product.repository.jpa.ShopRepository;
 import com.danghieu99.monolith.security.config.auth.UserDetailsImpl;

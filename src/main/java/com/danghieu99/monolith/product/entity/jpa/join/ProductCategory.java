@@ -1,4 +1,4 @@
-package com.danghieu99.monolith.product.entity;
+package com.danghieu99.monolith.product.entity.jpa.join;
 
 import com.danghieu99.monolith.common.entity.BaseEntity;
 import jakarta.persistence.Column;
@@ -7,15 +7,18 @@ import jakarta.persistence.Table;
 import lombok.*;
 
 @Entity
-@Table(name = "images")
+@Table(name = "product_categories")
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
 @Builder
-public class Image extends BaseEntity {
+public class ProductCategory extends BaseEntity {
 
     @Column(nullable = false)
-    private String url;
+    private int productId;
+
+    @Column(nullable = false)
+    private int categoryId;
 }

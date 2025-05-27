@@ -1,7 +1,5 @@
 package com.danghieu99.monolith.product.dto.response;
 
-import com.danghieu99.monolith.product.constant.EProductStatus;
-import com.danghieu99.monolith.product.entity.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -24,17 +22,20 @@ public class ProductDetailsResponse {
     private String description;
 
     @NotNull
-    private EProductStatus status;
+    private long basePrice;
 
     @NotNull
-    private Shop shop;
+    private String status;
+
+    @NotNull
+    private String shopUUID;
 
     @NotEmpty
-    private List<@NotNull Category> categories;
+    private List<@NotBlank String> categories;
 
     @NotEmpty
     private List<@NotNull VariantDetailsResponse> variants;
 
     @NotEmpty
-    private List<@NotBlank String> imageUrls;
+    private List<@NotBlank String> imageToken;
 }

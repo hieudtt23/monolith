@@ -1,6 +1,6 @@
 package com.danghieu99.monolith.product.repository.jpa.join;
 
-import com.danghieu99.monolith.product.entity.join.ProductShop;
+import com.danghieu99.monolith.product.entity.jpa.join.ProductShop;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.data.jpa.repository.JpaRepository;

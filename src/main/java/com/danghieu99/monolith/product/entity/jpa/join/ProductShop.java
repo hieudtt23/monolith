@@ -1,4 +1,4 @@
-package com.danghieu99.monolith.product.entity.join;
+package com.danghieu99.monolith.product.entity.jpa.join;
 
 import com.danghieu99.monolith.common.entity.BaseEntity;
 import jakarta.persistence.Column;
@@ -8,20 +8,20 @@ import jakarta.persistence.UniqueConstraint;
 import lombok.*;
 
 @Entity
-@Table(name = "product_global_attributes",
-        uniqueConstraints = {@UniqueConstraint(name = "uq_product_global_attribute",
-                columnNames = "product_id, global_attribute_id")})
+@Table(name = "product_shops",
+        uniqueConstraints = {@UniqueConstraint(name = "uq_product_shop",
+                columnNames = "product_id, shop_id")})
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
 @Builder
-public class ProductGlobalAttribute extends BaseEntity {
+public class ProductShop extends BaseEntity {
 
     @Column(nullable = false)
     private int productId;
 
     @Column(nullable = false)
-    private int globalAttributeId;
+    private int shopId;
 }

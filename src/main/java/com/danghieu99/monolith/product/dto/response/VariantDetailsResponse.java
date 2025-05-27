@@ -15,11 +15,10 @@ public class VariantDetailsResponse {
     private final String uuid;
 
     @NotBlank
-    private final String type;
-
-    @NotBlank
     private final String description;
 
     @NotEmpty
     private final Map<@NotBlank String, @NotBlank String> attributes;
+
+    private final String imageUrl;
 }

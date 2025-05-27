@@ -1,6 +1,6 @@
 package com.danghieu99.monolith.product.mapper;
 
-import com.danghieu99.monolith.product.entity.Attribute;
+import com.danghieu99.monolith.product.entity.jpa.Attribute;
 import org.mapstruct.Mapper;
 import org.mapstruct.ReportingPolicy;
 

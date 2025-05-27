@@ -1,4 +1,4 @@
-package com.danghieu99.monolith.product.entity;
+package com.danghieu99.monolith.product.entity.jpa;
 
 import com.danghieu99.monolith.common.entity.BaseEntity;
 import jakarta.persistence.Column;
@@ -7,21 +7,15 @@ import jakarta.persistence.Table;
 import lombok.*;
 
 @Entity
-@Table(name = "global_attributes")
+@Table(name = "images")
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
 @Builder
-public class GlobalAttribute extends BaseEntity {
+public class Image extends BaseEntity {
 
     @Column(nullable = false)
-    private int globalAttributeTypeId;
-
-    @Column(nullable = false)
-    private String value;
-
-    @Column(nullable = false)
-    private String description;
+    private String token;
 }

@@ -1,6 +1,6 @@
 package com.danghieu99.monolith.product.repository.jpa;
 
-import com.danghieu99.monolith.product.entity.Attribute;
+import com.danghieu99.monolith.product.entity.jpa.Attribute;
 import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;

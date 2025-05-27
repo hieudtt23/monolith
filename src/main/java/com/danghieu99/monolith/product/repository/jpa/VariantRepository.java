@@ -1,6 +1,6 @@
 package com.danghieu99.monolith.product.repository.jpa;
 
-import com.danghieu99.monolith.product.entity.Variant;
+import com.danghieu99.monolith.product.entity.jpa.Variant;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.data.domain.Page;

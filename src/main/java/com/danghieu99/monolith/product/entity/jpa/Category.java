@@ -1,11 +1,8 @@
-package com.danghieu99.monolith.product.entity;
+package com.danghieu99.monolith.product.entity.jpa;
 
 import com.danghieu99.monolith.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
-
-import java.util.Set;
-import java.util.UUID;
 
 @Entity
 @Table(name = "categories",

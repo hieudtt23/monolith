@@ -41,7 +41,8 @@ public class SellerProductController {
     }
 
     @PatchMapping("")
-    public ResponseEntity<?> updateProductDetailsByUUID(@RequestParam @NotBlank String uuid, @RequestBody UpdateProductDetailsRequest request) {
+    public ResponseEntity<?> updateProductDetailsByUUID(@RequestParam @NotBlank String uuid,
+                                                        @RequestBody UpdateProductDetailsRequest request) {
         sellerProductService.updateProductDetailsByUUID(uuid, request);
         return ResponseEntity.ok().build();
     }
@@ -52,9 +53,25 @@ public class SellerProductController {
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/image/upload")
+    @PostMapping("/image")
     public ResponseEntity<?> saveProductImages(@RequestBody SaveProductImagesRequest request) {
         sellerProductImageService.save(request);
         return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/image/by-product")
+    public void deleteByProductUUID(String productUUID) {
+        sellerProductImageService.deleteByProductUUID(productUUID);
+    }
+
+    @DeleteMapping("/image/by-token")
+    public void deleteByImageToken(@RequestParam String token) {
+        sellerProductImageService.deleteByImageToken(token);
+    }
+
+    @PatchMapping("/image")
+    public void setImageRole(@RequestParam String token,
+                             @RequestParam String role) {
+        sellerProductImageService.setImageRole(token, role);
     }
 }

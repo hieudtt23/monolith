@@ -3,7 +3,7 @@ package com.danghieu99.monolith.product.service.category;
 import com.danghieu99.monolith.common.exception.ResourceNotFoundException;
 import com.danghieu99.monolith.product.dto.request.SaveCategoryRequest;
 import com.danghieu99.monolith.product.dto.response.CategoryResponse;
-import com.danghieu99.monolith.product.entity.Category;
+import com.danghieu99.monolith.product.entity.jpa.Category;
 import com.danghieu99.monolith.product.mapper.CategoryMapper;
 import com.danghieu99.monolith.product.repository.jpa.CategoryRepository;
 import com.danghieu99.monolith.product.repository.jpa.join.ProductCategoryRepository;

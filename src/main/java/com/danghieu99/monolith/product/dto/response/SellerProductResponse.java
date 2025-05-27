@@ -1,8 +1,8 @@
 package com.danghieu99.monolith.product.dto.response;
 
-import com.danghieu99.monolith.product.entity.Category;
-import com.danghieu99.monolith.product.entity.Shop;
-import com.danghieu99.monolith.product.entity.Variant;
+import com.danghieu99.monolith.product.entity.jpa.Category;
+import com.danghieu99.monolith.product.entity.jpa.Shop;
+import com.danghieu99.monolith.product.entity.jpa.Variant;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.Builder;

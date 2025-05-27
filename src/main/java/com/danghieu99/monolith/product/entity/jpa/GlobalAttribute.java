@@ -1,4 +1,4 @@
-package com.danghieu99.monolith.product.entity.join;
+package com.danghieu99.monolith.product.entity.jpa;
 
 import com.danghieu99.monolith.common.entity.BaseEntity;
 import jakarta.persistence.Column;
@@ -6,21 +6,22 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import lombok.*;
 
-import java.util.UUID;
-
 @Entity
-@Table(name = "product_images")
+@Table(name = "global_attributes")
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
 @Builder
-public class ProductImage extends BaseEntity {
+public class GlobalAttribute extends BaseEntity {
 
     @Column(nullable = false)
-    private UUID productUUID;
+    private int globalAttributeTypeId;
 
     @Column(nullable = false)
-    private UUID imageUUID;
+    private String value;
+
+    @Column(nullable = false)
+    private String description;
 }

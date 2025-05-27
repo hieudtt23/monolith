@@ -2,7 +2,8 @@ package com.danghieu99.monolith.product.mapper;
 
 import com.danghieu99.monolith.product.dto.request.SaveProductRequest;
 import com.danghieu99.monolith.product.dto.response.ProductDetailsResponse;
-import com.danghieu99.monolith.product.entity.Product;
+import com.danghieu99.monolith.product.dto.response.ProductResponse;
+import com.danghieu99.monolith.product.entity.jpa.Product;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Mappings;
@@ -15,6 +16,12 @@ public interface ProductMapper {
 
     Product toProduct(SaveProductRequest request);
 
-    @Mappings({@Mapping(target = "categories", ignore = true)})
+    @Mappings({@Mapping(target = "categories", ignore = true),
+            @Mapping(target = "shopUUID", ignore = true),
+            @Mapping(target = "variants", ignore = true),
+            @Mapping(target = "imageToken", ignore = true)})
     ProductDetailsResponse toGetProductDetailsResponse(Product product);
+
+    @Mapping(target = "imageToken", ignore = true)
+    ProductResponse toProductResponse(Product product);
 }

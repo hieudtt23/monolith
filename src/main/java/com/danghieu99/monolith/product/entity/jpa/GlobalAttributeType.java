@@ -1,4 +1,4 @@
-package com.danghieu99.monolith.product.entity.join;
+package com.danghieu99.monolith.product.entity.jpa;
 
 import com.danghieu99.monolith.common.entity.BaseEntity;
 import jakarta.persistence.Column;
@@ -7,18 +7,15 @@ import jakarta.persistence.Table;
 import lombok.*;
 
 @Entity
-@Table(name = "product_categories")
+@Table(name = "global_product_attributes")
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
 @Builder
-public class ProductCategory extends BaseEntity {
+public class GlobalAttributeType extends BaseEntity {
 
-    @Column(nullable = false)
-    private int productId;
-
-    @Column(nullable = false)
-    private int categoryId;
+    @Column(nullable = false, unique = true)
+    private String name;
 }

@@ -1,4 +1,4 @@
-package com.danghieu99.monolith.product.entity;
+package com.danghieu99.monolith.product.entity.jpa.join;
 
 import com.danghieu99.monolith.common.entity.BaseEntity;
 import jakarta.persistence.Column;
@@ -8,23 +8,23 @@ import jakarta.persistence.UniqueConstraint;
 import lombok.*;
 
 @Entity
-@Table(name = "attributes",
-        uniqueConstraints = {@UniqueConstraint(name = "uq_product_attribute",
-                columnNames = "product_id, type, value")})
+@Table(name = "variant_attributes",
+        uniqueConstraints = {@UniqueConstraint(name = "uq_variant_attribute_type",
+                columnNames = "id, attribute_type")})
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
 @Builder
-public class Attribute extends BaseEntity {
+public class VariantAttribute extends BaseEntity {
 
     @Column(nullable = false)
-    private int productId;
+    private int variantId;
 
     @Column(nullable = false)
-    private String type;
+    private int attributeId;
 
     @Column(nullable = false)
-    private String value;
+    private String attributeType;
 }

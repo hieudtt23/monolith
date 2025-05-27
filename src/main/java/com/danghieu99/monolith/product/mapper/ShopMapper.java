@@ -2,7 +2,7 @@ package com.danghieu99.monolith.product.mapper;
 
 import com.danghieu99.monolith.product.dto.request.SaveShopRequest;
 import com.danghieu99.monolith.product.dto.response.ShopDetailsResponse;
-import com.danghieu99.monolith.product.entity.Shop;
+import com.danghieu99.monolith.product.entity.jpa.Shop;
 import org.mapstruct.Mapper;
 import org.mapstruct.ReportingPolicy;
 

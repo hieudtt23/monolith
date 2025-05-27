@@ -1,6 +1,6 @@
 package com.danghieu99.monolith.product.repository.jpa;
 
-import com.danghieu99.monolith.product.entity.Shop;
+import com.danghieu99.monolith.product.entity.jpa.Shop;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
