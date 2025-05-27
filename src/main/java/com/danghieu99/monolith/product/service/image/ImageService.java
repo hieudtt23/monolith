@@ -1,10 +1,10 @@
 package com.danghieu99.monolith.product.service.image;
 
-import org.springframework.web.multipart.MultipartFile;
-
-import java.io.IOException;
+import java.util.concurrent.CompletableFuture;
 
 public interface ImageService {
 
-    void upload(String token, MultipartFile file) throws IOException;
+    CompletableFuture<?> upload(String token, byte[] byteArray);
+
+    CompletableFuture<?> uploadAndReturnUrl(String token, byte[] byteArray);
 }

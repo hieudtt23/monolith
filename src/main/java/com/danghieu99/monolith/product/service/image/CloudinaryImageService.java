@@ -9,11 +9,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 @Service("product-cloudinary-image-service")
 @Slf4j
@@ -25,18 +25,45 @@ public class CloudinaryImageService implements ImageService {
         this.cloudinary = cloudinary;
     }
 
+    @Async
     @Override
-    public void upload(@NotBlank final String token, @NotNull MultipartFile file) throws IOException {
+    public CompletableFuture<Void> upload(@NotBlank final String token, @NotNull byte[] byteArray) {
         try {
-            cloudinary.uploader().upload(file.getBytes(), ObjectUtils.asMap(
+            cloudinary.uploader().upload(byteArray, ObjectUtils.asMap(
                     "public_id", token,
-                    "eager", Collections.singletonList(new Transformation().width(1920).height(1080).crop("limit").quality("auto").fetchFormat("auto"))
+                    "eager", Collections.singletonList(new Transformation()
+                            .width(1920)
+                            .height(1080)
+                            .crop("limit")
+                            .quality("auto")
+                            .fetchFormat("auto"))
                     , "resource_type", "image"
             ));
+            return CompletableFuture.completedFuture(null);
         } catch (IOException e) {
-            log.error("Cloudinary upload error: {} for file: {}", e.getMessage(), file.getName());
-            throw e;
+            log.error("Cloudinary upload error: {}", e.getMessage());
+            return CompletableFuture.failedFuture(e);
         }
-        log.info("Cloudinary upload for file: {} success", file.getName());
+    }
+
+    @Async
+    @Override
+    public CompletableFuture<?> uploadAndReturnUrl(String token, byte[] byteArray) {
+        try {
+            Map<?, ?> result = cloudinary.uploader().upload(byteArray, ObjectUtils.asMap(
+                    "public_id", token,
+                    "eager", Collections.singletonList(new Transformation()
+                            .width(1920)
+                            .height(1080)
+                            .crop("limit")
+                            .quality("auto")
+                            .fetchFormat("auto"))
+                    , "resource_type", "image"
+            ));
+            return CompletableFuture.completedFuture(result.get("url"));
+        } catch (IOException e) {
+            log.error("Cloudinary upload error: {}", e.getMessage());
+            return CompletableFuture.failedFuture(e);
+        }
     }
 }

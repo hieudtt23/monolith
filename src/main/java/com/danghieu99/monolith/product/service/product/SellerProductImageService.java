@@ -1,5 +1,6 @@
 package com.danghieu99.monolith.product.service.product;
 
+import com.danghieu99.monolith.product.dto.response.SaveImagesResponse;
 import com.danghieu99.monolith.product.entity.jpa.Image;
 import com.danghieu99.monolith.product.entity.jpa.join.ProductImage;
 import com.danghieu99.monolith.product.repository.jpa.ImageRepository;
@@ -35,29 +36,43 @@ public class SellerProductImageService {
     }
 
     @Transactional
-    public void save(@NotBlank final String productUUID,
-                     @NotEmpty @Size(max = 10) final List<@NotNull MultipartFile> imgFiles) {
+    public SaveImagesResponse save(@NotBlank final String productUUID,
+                                   @NotEmpty @Size(max = 10) final List<@NotNull MultipartFile> imgFiles) {
         List<Image> images = new ArrayList<>();
         List<ProductImage> productImages = new ArrayList<>();
+        List<String> failedFiles = new ArrayList<>();
+
         imgFiles.forEach(file -> {
             try {
                 String token = "product-image_" + UUID.randomUUID();
-                imageService.upload(token, file);
-                images.add(Image.builder()
+                var upload = imageService.upload(token, file.getBytes());
+                Image image = Image.builder()
                         .token(token)
-                        .build());
-                productImages.add(ProductImage.builder()
+                        .build();
+                ProductImage productImage = ProductImage.builder()
                         .imageToken(token)
                         .productUUID(UUID.fromString(productUUID))
-                        .build());
+                        .build();
+                if (upload.isCompletedExceptionally()) {
+                    failedFiles.add(file.getName());
+                } else if (upload.isDone()) {
+                    images.add(image);
+                    productImages.add(productImage);
+                }
             } catch (IOException e) {
                 log.error("ProductUUID: {}, file: {} upload failed", productUUID, file.getName(), e);
             }
         });
+        SaveImagesResponse response = new SaveImagesResponse();
         if (!images.isEmpty() && !productImages.isEmpty()) {
             imageRepository.saveAll(images);
             productImageRepository.saveAll(productImages);
+            response.setSuccess(true);
+        } else {
+            response.setSuccess(false);
         }
+        response.setMessage("Upload failed for files: " + failedFiles);
+        return response;
     }
 
     @Transactional
