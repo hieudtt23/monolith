@@ -95,8 +95,8 @@ public class SellerProductService {
     }
 
     @Transactional
-    public Page<VariantDetailsResponse> getVariantsByProductUUID(@NotBlank String productUUID, @NotNull Pageable
-            pageable) {
+    public Page<VariantDetailsResponse> getVariantsByProductUUID(@NotBlank String productUUID,
+                                                                 @NotNull Pageable pageable) {
         return variantRepository.findByProductUuid(UUID.fromString(productUUID), pageable).map(variantMapper::toResponse);
     }
 

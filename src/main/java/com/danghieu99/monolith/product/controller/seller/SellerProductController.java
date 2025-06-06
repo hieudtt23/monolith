@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -58,13 +59,6 @@ public class SellerProductController {
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping(value = "/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> saveProductImages(@RequestPart final String productUUID,
-                                               @RequestPart @Size(min = 1, max = 10) final List<@NotNull MultipartFile> files) {
-        sellerProductImageService.save(productUUID, files);
-        return ResponseEntity.ok().build();
-    }
-
     @DeleteMapping("/image/by-product")
     public void deleteByProductUUID(@RequestParam String productUUID) {
         sellerProductImageService.deleteByProductUUID(productUUID);
@@ -82,8 +76,13 @@ public class SellerProductController {
     }
 
     @PostMapping("/variant/image")
-    public void saveVariantImages(@RequestPart String variantUUID,
-                                  @RequestPart @NotEmpty @Size(max = 10) final List<@NotNull MultipartFile> files) {
+    public ResponseEntity<?> saveVariantImages(@RequestParam @NotEmpty Map<@NotBlank String, @NotBlank String> map) {
+        return ResponseEntity.ok(sellerProductImageService.saveVariantImage(map));
+    }
 
+    @PostMapping(value = "/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> saveProductImages(@RequestPart final String productUUID,
+                                               @RequestPart @Size(min = 1, max = 10) final List<@NotNull MultipartFile> files) {
+        return ResponseEntity.ok(sellerProductImageService.uploadAndSave(productUUID, files));
     }
 }

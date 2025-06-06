@@ -1,10 +1,15 @@
 package com.danghieu99.monolith.product.service.product;
 
+import com.danghieu99.monolith.common.exception.ResourceNotFoundException;
 import com.danghieu99.monolith.product.dto.response.SaveImagesResponse;
+import com.danghieu99.monolith.product.dto.response.SaveVariantImageResponse;
 import com.danghieu99.monolith.product.entity.jpa.Image;
 import com.danghieu99.monolith.product.entity.jpa.join.ProductImage;
+import com.danghieu99.monolith.product.entity.jpa.join.VariantImage;
 import com.danghieu99.monolith.product.repository.jpa.ImageRepository;
+import com.danghieu99.monolith.product.repository.jpa.VariantRepository;
 import com.danghieu99.monolith.product.repository.jpa.join.ProductImageRepository;
+import com.danghieu99.monolith.product.repository.jpa.join.VariantImageRepository;
 import com.danghieu99.monolith.product.service.image.ImageService;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotBlank;
@@ -27,18 +32,23 @@ public class SellerProductImageService {
     private final ImageService imageService;
     private final ImageRepository imageRepository;
     private final ProductImageRepository productImageRepository;
+    private final VariantRepository variantRepository;
+    private final VariantImageRepository variantImageRepository;
 
     public SellerProductImageService(@Qualifier("product-cloudinary-image-service") ImageService imageService,
                                      ImageRepository imageRepository,
-                                     ProductImageRepository productImageRepository) {
+                                     ProductImageRepository productImageRepository,
+                                     VariantRepository variantRepository, VariantImageRepository variantImageRepository) {
         this.imageService = imageService;
         this.imageRepository = imageRepository;
         this.productImageRepository = productImageRepository;
+        this.variantRepository = variantRepository;
+        this.variantImageRepository = variantImageRepository;
     }
 
     @Transactional
-    public SaveImagesResponse save(@NotBlank final String productUUID,
-                                   @NotEmpty @Size(max = 10) final List<@NotNull MultipartFile> imgFiles) {
+    public SaveImagesResponse uploadAndSave(@NotBlank final String productUUID,
+                                            @NotEmpty @Size(max = 10) final List<@NotNull MultipartFile> imgFiles) {
         Collection<Image> images = new ConcurrentLinkedQueue<>();
         Collection<String> failedFileNames = new ConcurrentLinkedQueue<>();
         List<ProductImage> productImages = new ArrayList<>();
@@ -77,6 +87,33 @@ public class SellerProductImageService {
             response.setMessage("Upload failed for files: " + failedFileNames);
         }
         return response;
+    }
+
+    @Transactional
+    public SaveVariantImageResponse saveVariantImage(@NotEmpty Map<@NotBlank String, @NotBlank String> variantImageMap) {
+        Map<String, String> failedMap = new HashMap<>();
+        List<VariantImage> variantImages = new ArrayList<>();
+        variantImageMap.forEach((variantUUID, imageToken) -> {
+            try {
+                int variantId = variantRepository.findByUuid(UUID.fromString(variantUUID))
+                        .orElseThrow(() -> new ResourceNotFoundException("Variant", "uuid", variantUUID))
+                        .getId();
+                VariantImage variantImage = VariantImage.builder()
+                        .variantId(variantId)
+                        .imageToken(imageToken)
+                        .build();
+                variantImages.add(variantImage);
+            } catch (ResourceNotFoundException e) {
+                log.error("VariantUUID: {}, imageToken: {} upload failed", variantUUID, imageToken);
+                failedMap.put(variantUUID, imageToken);
+            }
+        });
+        if (!variantImages.isEmpty()) {
+            variantImageRepository.saveAll(variantImages);
+        }
+        return SaveVariantImageResponse.builder()
+                .failedMap(failedMap)
+                .build();
     }
 
     @Transactional

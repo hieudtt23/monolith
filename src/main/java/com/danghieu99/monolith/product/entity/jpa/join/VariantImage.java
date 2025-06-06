@@ -6,8 +6,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import lombok.*;
 
-import java.util.UUID;
-
 @Entity
 @Table(name = "variant_images")
 @Getter
@@ -22,5 +20,5 @@ public class VariantImage extends BaseEntity {
     private int variantId;
 
     @Column(nullable = false)
-    private UUID imageUUID;
+    private String imageToken;
 }

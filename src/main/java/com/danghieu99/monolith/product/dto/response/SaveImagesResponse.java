@@ -1,12 +1,12 @@
 package com.danghieu99.monolith.product.dto.response;
 
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @NoArgsConstructor
-@Data
-@Builder
+@AllArgsConstructor
+@Getter
+@Setter
+@Builder(access = AccessLevel.PUBLIC)
 public class SaveImagesResponse {
 
     private boolean success;
