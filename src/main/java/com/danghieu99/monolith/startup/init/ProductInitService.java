@@ -1,10 +1,12 @@
 package com.danghieu99.monolith.startup.init;
 
 import com.danghieu99.monolith.product.constant.EProductStatus;
-import com.danghieu99.monolith.product.entity.*;
-import com.danghieu99.monolith.product.entity.join.ProductCategory;
-import com.danghieu99.monolith.product.entity.join.ProductShop;
-import com.danghieu99.monolith.product.entity.join.VariantAttribute;
+import com.danghieu99.monolith.product.entity.jpa.Attribute;
+import com.danghieu99.monolith.product.entity.jpa.Product;
+import com.danghieu99.monolith.product.entity.jpa.Variant;
+import com.danghieu99.monolith.product.entity.jpa.join.ProductCategory;
+import com.danghieu99.monolith.product.entity.jpa.join.ProductShop;
+import com.danghieu99.monolith.product.entity.jpa.join.VariantAttribute;
 import com.danghieu99.monolith.product.repository.jpa.AttributeRepository;
 import com.danghieu99.monolith.product.repository.jpa.ProductRepository;
 import com.danghieu99.monolith.product.repository.jpa.VariantRepository;

@@ -1,7 +1,7 @@
 package com.danghieu99.monolith.startup.init;
 
-import com.danghieu99.monolith.product.entity.Shop;
 import com.danghieu99.monolith.product.constant.EShopStatus;
+import com.danghieu99.monolith.product.entity.jpa.Shop;
 import com.danghieu99.monolith.product.repository.jpa.ShopRepository;
 import com.danghieu99.monolith.security.constant.ERole;
 import com.danghieu99.monolith.security.repository.jpa.AccountRepository;

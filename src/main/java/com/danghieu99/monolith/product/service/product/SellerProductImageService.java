@@ -18,6 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 @Service
 @Slf4j
@@ -38,11 +39,11 @@ public class SellerProductImageService {
     @Transactional
     public SaveImagesResponse save(@NotBlank final String productUUID,
                                    @NotEmpty @Size(max = 10) final List<@NotNull MultipartFile> imgFiles) {
-        List<Image> images = new ArrayList<>();
+        Collection<Image> images = new ConcurrentLinkedQueue<>();
+        Collection<String> failedFileNames = new ConcurrentLinkedQueue<>();
         List<ProductImage> productImages = new ArrayList<>();
-        List<String> failedFiles = new ArrayList<>();
 
-        imgFiles.forEach(file -> {
+        imgFiles.parallelStream().forEach(file -> {
             try {
                 String token = "product-image_" + UUID.randomUUID();
                 var upload = imageService.upload(token, file.getBytes());
@@ -53,9 +54,10 @@ public class SellerProductImageService {
                         .imageToken(token)
                         .productUUID(UUID.fromString(productUUID))
                         .build();
+                upload.join();
                 if (upload.isCompletedExceptionally()) {
-                    failedFiles.add(file.getName());
-                } else if (upload.isDone()) {
+                    failedFileNames.add(file.getName());
+                } else {
                     images.add(image);
                     productImages.add(productImage);
                 }
@@ -71,7 +73,9 @@ public class SellerProductImageService {
         } else {
             response.setSuccess(false);
         }
-        response.setMessage("Upload failed for files: " + failedFiles);
+        if (!failedFileNames.isEmpty()) {
+            response.setMessage("Upload failed for files: " + failedFileNames);
+        }
         return response;
     }
 

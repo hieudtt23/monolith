@@ -27,7 +27,7 @@ public class CloudinaryImageService implements ImageService {
 
     @Async
     @Override
-    public CompletableFuture<Void> upload(@NotBlank final String token, @NotNull byte[] byteArray) {
+    public CompletableFuture<?> upload(@NotBlank final String token, @NotNull byte[] byteArray) {
         try {
             cloudinary.uploader().upload(byteArray, ObjectUtils.asMap(
                     "public_id", token,

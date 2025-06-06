@@ -99,16 +99,18 @@ public class WebSecurityConfig {
 //                .requiresChannel(channel -> channel.anyRequest().requiresSecure())
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(request -> corsConfiguration))
+//                .authorizeHttpRequests(auth -> auth
+//                        .requestMatchers("/api/v1/user/**").authenticated()
+//                        .requestMatchers("/api/v1/seller/**").hasRole("SELLER")
+//                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
+//                        .requestMatchers("/api/v1/**").permitAll()
+//                        .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/swagger-ui.html/**", "/v3/api-docs/**").permitAll()
+//                        .requestMatchers("/swagger-resources/**").permitAll()
+//                        .requestMatchers("/error").permitAll()
+//                        .anyRequest().denyAll()
+//                )
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/v1/user/**").authenticated()
-                        .requestMatchers("/api/v1/seller/**").hasRole("SELLER")
-                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/v1/**").permitAll()
-                        .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/swagger-ui.html/**", "/v3/api-docs/**").permitAll()
-                        .requestMatchers("/swagger-resources/**").permitAll()
-                        .requestMatchers("/error").permitAll()
-                        .anyRequest().denyAll()
-                )
+                        .anyRequest().permitAll())
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(exception -> exception
