@@ -7,4 +7,6 @@ public interface ImageService {
     CompletableFuture<?> upload(String token, byte[] byteArray);
 
     CompletableFuture<?> uploadAndReturnUrl(String token, byte[] byteArray);
+
+    CompletableFuture<?> deleteImage(String token);
 }

@@ -17,12 +17,12 @@ public interface ImageRepository extends JpaRepository<Image, Integer> {
 
     @Query("select i from Image i " +
             "join ProductImage pi on pi.imageToken = i.token " +
-            "where pi.productUUID = :productUUID")
+            "where pi.productId = :productUUID")
     List<Image> findByProductUUID(UUID productUUID);
 
     @Query("select i from Image i " +
             "join ProductImage pi on pi.imageToken = i.token " +
-            "where pi.productUUID = :productUUID and pi.role = :role")
+            "where pi.productId = :productUUID and pi.role = :role")
     Optional<Image> findByProductUUIDAndRole(UUID productUUID, EImageRole role);
 
     void deleteByToken(String publicId);
@@ -32,6 +32,8 @@ public interface ImageRepository extends JpaRepository<Image, Integer> {
     @Query("delete from Image i " +
             "where i.token = " +
             "(select pi.imageToken from ProductImage pi " +
-            "where pi.productUUID = :uuid)")
+            "where pi.productId = :uuid)")
     void deleteByProductUUID(UUID uuid);
+
+    boolean existsByToken(String token);
 }

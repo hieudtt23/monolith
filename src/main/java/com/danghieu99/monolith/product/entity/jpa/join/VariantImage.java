@@ -16,9 +16,9 @@ import lombok.*;
 @Builder
 public class VariantImage extends BaseEntity {
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private int variantId;
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String imageToken;
 }

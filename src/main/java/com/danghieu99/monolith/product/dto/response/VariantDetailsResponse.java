@@ -1,7 +1,6 @@
 package com.danghieu99.monolith.product.dto.response;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
 import lombok.Builder;
 import lombok.Data;
 
@@ -17,8 +16,8 @@ public class VariantDetailsResponse {
     @NotBlank
     private final String description;
 
-    @NotEmpty
-    private final Map<@NotBlank String, @NotBlank String> attributes;
+    //type:value
+    private Map<@NotBlank String, @NotBlank String> attributes;
 
-    private final String imageUrl;
+    private String imageToken;
 }

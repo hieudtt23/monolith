@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -46,6 +47,11 @@ public interface AttributeRepository extends JpaRepository<Attribute, Integer> {
             "and a.type like concat('%', lower(:type), '%')" +
             "and a.value like concat('%', lower(:value), '%')")
     void deleteByTypeAndValueContainsIgnoreCase(UUID productUUID, String type, String value);
+
+    @Query("select a from Attribute a " +
+            "join VariantAttribute va on va.attributeId = a.id " +
+            "where va.variantId = :variantId")
+    Collection<Attribute> findByVariantId(int variantId);
 
     List<Attribute> uuid(UUID uuid);
 }

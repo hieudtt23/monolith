@@ -4,23 +4,29 @@ import com.danghieu99.monolith.common.exception.ResourceNotFoundException;
 import com.danghieu99.monolith.product.constant.EImageRole;
 import com.danghieu99.monolith.product.dto.response.ProductDetailsResponse;
 import com.danghieu99.monolith.product.dto.response.ProductResponse;
+import com.danghieu99.monolith.product.dto.response.VariantDetailsResponse;
 import com.danghieu99.monolith.product.entity.jpa.Category;
 import com.danghieu99.monolith.product.entity.jpa.Image;
 import com.danghieu99.monolith.product.entity.jpa.Product;
 import com.danghieu99.monolith.product.mapper.ProductMapper;
 import com.danghieu99.monolith.product.mapper.VariantMapper;
 import com.danghieu99.monolith.product.repository.jpa.*;
+import com.danghieu99.monolith.product.repository.jpa.join.VariantImageRepository;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ProductService {
@@ -32,6 +38,8 @@ public class ProductService {
     private final VariantRepository variantRepository;
     private final VariantMapper variantMapper;
     private final ImageRepository imageRepository;
+    private final VariantImageRepository variantImageRepository;
+    private final AttributeRepository attributeRepository;
 
     public Page<ProductResponse> getAll(Pageable pageable) {
         return productRepository.findAll(pageable).map(this::getProductResponseFromProduct);
@@ -67,10 +75,24 @@ public class ProductService {
 
     protected ProductDetailsResponse getProductDetailsResponseFromProduct(@NotNull Product product) {
         var response = productMapper.toGetProductDetailsResponse(product);
-        response.setShopUUID(shopRepository.findByProductUuid(product.getUuid()).getUuid().toString());
+        response.setShopUUID(shopRepository.findByProductUuid(product.getUuid())
+                .orElseThrow(() -> new ResourceNotFoundException("Shop", "productUUID", product.getUuid()))
+                .getUuid().toString());
         response.setCategories(categoryRepository.findByProductUUID(product.getUuid()).stream().map(Category::getName).toList());
-        response.setVariants(variantRepository.findByProductId(product.getId()).stream().map(variantMapper::toResponse).toList());
-        response.setImageToken(imageRepository.findByProductUUID(product.getUuid()).stream().map(Image::getToken).toList());
+        response.setVariants(variantRepository.findByProductId(product.getId()).parallelStream().map(variant -> {
+            VariantDetailsResponse variantResponse = variantMapper.toResponse(variant);
+            Map<String, String> attributes = new HashMap<>();
+            attributeRepository.findByVariantId(variant.getId())
+                    .parallelStream().forEach(attribute -> {
+                        attributes.put(attribute.getType(), attribute.getValue());
+                    });
+            variantResponse.setAttributes(attributes);
+            variantResponse.setImageToken(variantImageRepository.findByVariantId(variant.getId())
+                    .orElseThrow(() -> new ResourceNotFoundException("ImageToken", "id", variant.getId()))
+                    .getImageToken());
+            return variantResponse;
+        }).toList());
+        response.setImageTokens(imageRepository.findByProductUUID(product.getUuid()).stream().map(Image::getToken).toList());
         return response;
     }
 

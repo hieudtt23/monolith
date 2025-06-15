@@ -17,6 +17,7 @@ import com.danghieu99.monolith.product.repository.jpa.join.*;
 import com.danghieu99.monolith.security.config.auth.UserDetailsImpl;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -114,7 +115,8 @@ public class SellerProductService {
     }
 
     @Transactional
-    public void saveVariantsByProductId(@NotNull int productId, List<SaveVariantRequest> request) {
+    public void saveVariantsByProductId(@NotNull int productId,
+                                        @NotEmpty List<@NotNull SaveVariantRequest> request) {
         List<VariantAttribute> variantAttributes = new ArrayList<>();
         List<Variant> variants = new ArrayList<>();
         List<Attribute> attributes = new ArrayList<>();

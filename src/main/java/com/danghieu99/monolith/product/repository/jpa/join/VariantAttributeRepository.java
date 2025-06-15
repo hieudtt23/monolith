@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.UUID;
 
 @Repository
@@ -45,4 +46,8 @@ public interface VariantAttributeRepository extends JpaRepository<VariantAttribu
             "join Product p on v.productId = p.id " +
             "where p.uuid = :productUUID)")
     void deleteByProductUUID(UUID productUUID);
+
+    @Query("select va from VariantAttribute va " +
+            "where va.variantId = :variantId")
+    Collection<VariantAttribute> findByVariantId(int variantId);
 }

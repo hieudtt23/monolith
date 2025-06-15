@@ -6,6 +6,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
+import java.util.Collection;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface VariantImageRepository extends JpaRepository<VariantImage, Integer> {
@@ -21,4 +23,8 @@ public interface VariantImageRepository extends JpaRepository<VariantImage, Inte
     @Query("delete VariantImage vi " +
             "where vi.id = (select v.id from Variant v where v.uuid = :variantUUID)")
     void deleteByVariantUUID(UUID variantUUID);
+
+    @Query("select vi from VariantImage vi " +
+            "where vi.variantId = :variantId")
+    Optional<VariantImage> findByVariantId(int variantId);
 }

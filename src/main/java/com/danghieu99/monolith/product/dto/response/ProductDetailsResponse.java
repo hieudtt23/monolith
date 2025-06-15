@@ -1,7 +1,6 @@
 package com.danghieu99.monolith.product.dto.response;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
@@ -30,12 +29,9 @@ public class ProductDetailsResponse {
     @NotNull
     private String shopUUID;
 
-    @NotEmpty
     private List<@NotBlank String> categories;
 
-    @NotEmpty
     private List<@NotNull VariantDetailsResponse> variants;
 
-    @NotEmpty
-    private List<@NotBlank String> imageToken;
+    private List<@NotBlank String> imageTokens;
 }

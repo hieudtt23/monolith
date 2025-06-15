@@ -1,15 +1,20 @@
 package com.danghieu99.monolith.product.service.product;
 
 import com.danghieu99.monolith.common.exception.ResourceNotFoundException;
+import com.danghieu99.monolith.product.dto.request.SaveVariantImageRequest;
 import com.danghieu99.monolith.product.dto.response.SaveImagesResponse;
 import com.danghieu99.monolith.product.dto.response.SaveVariantImageResponse;
 import com.danghieu99.monolith.product.entity.jpa.Image;
+import com.danghieu99.monolith.product.entity.jpa.Product;
+import com.danghieu99.monolith.product.entity.jpa.Variant;
 import com.danghieu99.monolith.product.entity.jpa.join.ProductImage;
 import com.danghieu99.monolith.product.entity.jpa.join.VariantImage;
 import com.danghieu99.monolith.product.repository.jpa.ImageRepository;
+import com.danghieu99.monolith.product.repository.jpa.ProductRepository;
 import com.danghieu99.monolith.product.repository.jpa.VariantRepository;
 import com.danghieu99.monolith.product.repository.jpa.join.ProductImageRepository;
 import com.danghieu99.monolith.product.repository.jpa.join.VariantImageRepository;
+import com.danghieu99.monolith.product.service.image.CloudinaryImageService;
 import com.danghieu99.monolith.product.service.image.ImageService;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotBlank;
@@ -34,21 +39,28 @@ public class SellerProductImageService {
     private final ProductImageRepository productImageRepository;
     private final VariantRepository variantRepository;
     private final VariantImageRepository variantImageRepository;
+    private final ProductRepository productRepository;
+    private final CloudinaryImageService cloudinaryImageService;
 
     public SellerProductImageService(@Qualifier("product-cloudinary-image-service") ImageService imageService,
                                      ImageRepository imageRepository,
                                      ProductImageRepository productImageRepository,
-                                     VariantRepository variantRepository, VariantImageRepository variantImageRepository) {
+                                     VariantRepository variantRepository, VariantImageRepository variantImageRepository, ProductRepository productRepository, CloudinaryImageService cloudinaryImageService) {
         this.imageService = imageService;
         this.imageRepository = imageRepository;
         this.productImageRepository = productImageRepository;
         this.variantRepository = variantRepository;
         this.variantImageRepository = variantImageRepository;
+        this.productRepository = productRepository;
+        this.cloudinaryImageService = cloudinaryImageService;
     }
 
     @Transactional
-    public SaveImagesResponse uploadAndSave(@NotBlank final String productUUID,
-                                            @NotEmpty @Size(max = 10) final List<@NotNull MultipartFile> imgFiles) {
+    public SaveImagesResponse uploadAndSaveProductImages(@NotBlank final String productUUID,
+                                                         @Size(min = 1, max = 10) final List<@NotNull MultipartFile> imgFiles) {
+        Product product = productRepository.findByUuid(UUID.fromString(productUUID))
+                .orElseThrow(() -> new ResourceNotFoundException("Product", "uuid", productUUID));
+
         Collection<Image> images = new ConcurrentLinkedQueue<>();
         Collection<String> failedFileNames = new ConcurrentLinkedQueue<>();
         List<ProductImage> productImages = new ArrayList<>();
@@ -62,7 +74,7 @@ public class SellerProductImageService {
                         .build();
                 ProductImage productImage = ProductImage.builder()
                         .imageToken(token)
-                        .productUUID(UUID.fromString(productUUID))
+                        .productId(product.getId())
                         .build();
                 upload.join();
                 if (upload.isCompletedExceptionally()) {
@@ -84,28 +96,67 @@ public class SellerProductImageService {
             response.setSuccess(false);
         }
         if (!failedFileNames.isEmpty()) {
-            response.setMessage("Upload failed for files: " + failedFileNames);
+            response.setFailedFileNames(failedFileNames.toArray(String[]::new));
         }
         return response;
     }
 
     @Transactional
-    public SaveVariantImageResponse saveVariantImage(@NotEmpty Map<@NotBlank String, @NotBlank String> variantImageMap) {
+    public void replaceProductImage(@NotBlank final String imageToken,
+                                    @NotNull final MultipartFile file) {
+        try {
+            if (!productImageRepository.existsByImageToken(imageToken)) {
+                throw new ResourceNotFoundException("ProductImage", "imageToken", imageToken);
+            }
+            imageService.upload(imageToken, file.getBytes());
+        } catch (Exception e) {
+            log.error("imageToken: {}, fileName: {} replace failed. Exception: {}", imageToken, file.getName(), e.toString());
+        }
+    }
+
+    @Transactional
+    public void deleteProductImagesByProductUUID(@NotBlank final String productUUID) {
+        Collection<ProductImage> productImages = productImageRepository.findByProductUUID(UUID.fromString(productUUID));
+        Collection<String> tokens = productImages.stream().map(ProductImage::getImageToken).toList();
+        tokens.parallelStream().forEach(this::deleteProductImageByToken);
+    }
+
+    @Transactional
+    public void deleteProductImageByToken(@NotBlank final String token) {
+        try {
+            var delete = cloudinaryImageService.deleteImage(token);
+            delete.join();
+            if (!delete.isCompletedExceptionally()) {
+                imageRepository.deleteByToken(token);
+                productImageRepository.deleteByImageToken(token);
+            }
+        } catch (Exception e) {
+            log.error("imageToken {} delete failed", token);
+        }
+    }
+
+    @Transactional
+    public SaveVariantImageResponse saveVariantImage(@NotEmpty final List<@NotNull SaveVariantImageRequest> requests) {
         Map<String, String> failedMap = new HashMap<>();
         List<VariantImage> variantImages = new ArrayList<>();
-        variantImageMap.forEach((variantUUID, imageToken) -> {
+        requests.forEach((request) -> {
             try {
-                int variantId = variantRepository.findByUuid(UUID.fromString(variantUUID))
-                        .orElseThrow(() -> new ResourceNotFoundException("Variant", "uuid", variantUUID))
-                        .getId();
+                Variant variant = variantRepository.findByUuid(UUID.fromString(request.getVariantUUID()))
+                        .orElseThrow(() -> new ResourceNotFoundException("Variant", "uuid", request.getVariantUUID()));
+                ProductImage productImage = productImageRepository.findByImageToken(request.getImageToken())
+                        .orElseThrow(() -> new ResourceNotFoundException("ProductImage", "imageToken", request.getImageToken()));
+                if (variant.getProductId() != productImage.getProductId()) {
+                    throw new IllegalArgumentException("Invalid product image");
+                }
                 VariantImage variantImage = VariantImage.builder()
-                        .variantId(variantId)
-                        .imageToken(imageToken)
+                        .variantId(variant.getId())
+                        .imageToken(request.getImageToken())
                         .build();
                 variantImages.add(variantImage);
             } catch (ResourceNotFoundException e) {
-                log.error("VariantUUID: {}, imageToken: {} upload failed", variantUUID, imageToken);
-                failedMap.put(variantUUID, imageToken);
+                log.error("Save variantUUID: {}, imageToken: {}, Exception: {}", request.getVariantUUID(), request.getImageToken(), e.toString());
+                failedMap.put(request.getVariantUUID(), request.getImageToken());
+                throw e;
             }
         });
         if (!variantImages.isEmpty()) {
@@ -117,20 +168,20 @@ public class SellerProductImageService {
     }
 
     @Transactional
-    public void deleteByProductUUID(String productUUID) {
+    public void deleteByProductUUID(final String productUUID) {
         UUID uuid = UUID.fromString(productUUID);
         imageRepository.deleteByProductUUID(uuid);
         productImageRepository.deleteByProductUUID(uuid);
     }
 
     @Transactional
-    public void deleteByImageToken(String token) {
+    public void deleteByImageToken(final String token) {
         productImageRepository.deleteByImageToken(token);
         imageRepository.deleteByToken(token);
     }
 
     @Transactional
-    public void setImageRole(String token, String role) {
+    public void setImageRole(final String token, final String role) {
         productImageRepository.updateRoleByImageToken(token, role);
     }
 }

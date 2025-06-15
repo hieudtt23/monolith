@@ -4,9 +4,9 @@ import com.cloudinary.Cloudinary;
 import com.cloudinary.Transformation;
 import com.cloudinary.utils.ObjectUtils;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -26,8 +26,9 @@ public class CloudinaryImageService implements ImageService {
     }
 
     @Async
+    @Retryable
     @Override
-    public CompletableFuture<?> upload(@NotBlank final String token, @NotNull byte[] byteArray) {
+    public CompletableFuture<?> upload(@NotBlank final String token, byte[] byteArray) {
         try {
             cloudinary.uploader().upload(byteArray, ObjectUtils.asMap(
                     "public_id", token,
@@ -47,8 +48,9 @@ public class CloudinaryImageService implements ImageService {
     }
 
     @Async
+    @Retryable
     @Override
-    public CompletableFuture<?> uploadAndReturnUrl(String token, byte[] byteArray) {
+    public CompletableFuture<?> uploadAndReturnUrl(@NotBlank String token, byte[] byteArray) {
         try {
             Map<?, ?> result = cloudinary.uploader().upload(byteArray, ObjectUtils.asMap(
                     "public_id", token,
@@ -63,6 +65,19 @@ public class CloudinaryImageService implements ImageService {
             return CompletableFuture.completedFuture(result.get("url"));
         } catch (IOException e) {
             log.error("Cloudinary upload error: {}", e.getMessage());
+            return CompletableFuture.failedFuture(e);
+        }
+    }
+
+    @Async
+    @Retryable
+    @Override
+    public CompletableFuture<?> deleteImage(@NotBlank String token) {
+        try {
+            cloudinary.uploader().destroy(token, ObjectUtils.emptyMap());
+            return CompletableFuture.completedFuture(null);
+        } catch (Exception e) {
+            log.error("Cloudinary destroy error: {}", e.getMessage());
             return CompletableFuture.failedFuture(e);
         }
     }

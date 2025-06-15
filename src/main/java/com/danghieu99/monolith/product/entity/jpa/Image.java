@@ -16,6 +16,7 @@ import lombok.*;
 @Builder
 public class Image extends BaseEntity {
 
+    //public_id
     @Column(nullable = false)
     private String token;
 }

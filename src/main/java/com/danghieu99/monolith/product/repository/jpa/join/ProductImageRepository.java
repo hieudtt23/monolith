@@ -7,6 +7,8 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
@@ -34,4 +36,16 @@ public interface ProductImageRepository extends JpaRepository<ProductImage, Inte
             "(select i.token from Image i " +
             "where i.token = :token)")
     void deleteByImageToken(String token);
+
+    Optional<ProductImage> findByImageToken(String imageToken);
+
+    boolean existsByImageToken(String imageToken);
+
+    @Modifying
+    @Transactional
+    @Query("select pi from ProductImage pi " +
+            "where pi.productId = " +
+            "(select p.id from Product p " +
+            "where p.uuid = :productUUID)")
+     Collection<ProductImage> findByProductUUID(UUID productUUID);
 }

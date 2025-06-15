@@ -1,6 +1,7 @@
 package com.danghieu99.monolith.product.controller.seller;
 
 import com.danghieu99.monolith.product.dto.request.SaveProductRequest;
+import com.danghieu99.monolith.product.dto.request.SaveVariantImageRequest;
 import com.danghieu99.monolith.product.dto.request.UpdateProductDetailsRequest;
 import com.danghieu99.monolith.product.dto.response.ProductDetailsResponse;
 import com.danghieu99.monolith.product.service.product.SellerProductImageService;
@@ -22,7 +23,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -76,13 +76,13 @@ public class SellerProductController {
     }
 
     @PostMapping("/variant/image")
-    public ResponseEntity<?> saveVariantImages(@RequestParam @NotEmpty Map<@NotBlank String, @NotBlank String> map) {
-        return ResponseEntity.ok(sellerProductImageService.saveVariantImage(map));
+    public ResponseEntity<?> saveVariantImages(@RequestParam @NotEmpty List<SaveVariantImageRequest> requests) {
+        return ResponseEntity.ok(sellerProductImageService.saveVariantImage(requests));
     }
 
     @PostMapping(value = "/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> saveProductImages(@RequestPart final String productUUID,
                                                @RequestPart @Size(min = 1, max = 10) final List<@NotNull MultipartFile> files) {
-        return ResponseEntity.ok(sellerProductImageService.uploadAndSave(productUUID, files));
+        return ResponseEntity.ok(sellerProductImageService.uploadAndSaveProductImages(productUUID, files));
     }
 }

@@ -18,7 +18,7 @@ import java.util.UUID;
 public class ProductImage extends BaseEntity {
 
     @Column(nullable = false)
-    private UUID productUUID;
+    private int productId;
 
     @Column(nullable = false)
     private String imageToken;
