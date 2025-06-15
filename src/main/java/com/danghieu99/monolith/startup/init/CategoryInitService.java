@@ -1,7 +1,7 @@
 package com.danghieu99.monolith.startup.init;
 
-import com.danghieu99.monolith.product.entity.jpa.Category;
-import com.danghieu99.monolith.product.repository.jpa.CategoryRepository;
+import com.danghieu99.monolith.ecommerce.product.entity.jpa.Category;
+import com.danghieu99.monolith.ecommerce.product.repository.jpa.CategoryRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
