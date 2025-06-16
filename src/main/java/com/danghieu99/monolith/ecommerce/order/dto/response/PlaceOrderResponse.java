@@ -1,17 +1,16 @@
 package com.danghieu99.monolith.ecommerce.order.dto.response;
 
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
-import lombok.Builder;
-import lombok.Data;
+import com.danghieu99.monolith.common.dto.BaseResponse;
+import lombok.*;
 
-@Data
-@Builder
-public class PlaceOrderResponse {
+import java.util.List;
 
-    @NotNull
-    private final boolean success;
+@Getter
+@Setter
+@EqualsAndHashCode(callSuper = true)
+@NoArgsConstructor
+@AllArgsConstructor
+public class PlaceOrderResponse extends BaseResponse {
 
-    @NotEmpty
-    private final String message;
+    private List<OrderItemResponse> failed;
 }

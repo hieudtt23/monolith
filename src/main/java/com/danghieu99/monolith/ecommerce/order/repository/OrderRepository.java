@@ -36,8 +36,19 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
             "where o.uuid = :uuid")
     void updateOrderStatusAndDetails(UUID uuid, EOrderStatus status, String details);
 
+    Page<Order> findByShopId(int shopId, Pageable pageable);
+
+    @Query("select o from Order o " +
+            "join Shop s on o.shopId = s.id " +
+            "where s.uuid = :shopUUID")
     Page<Order> findByShopUUID(UUID shopUUID, Pageable pageable);
 
+    Page<Order> findByShopIdAndStatus(int shopId, EOrderStatus status, Pageable pageable);
+
+    @Query("select o from Order o " +
+            "join Shop s on o.shopId = s.id " +
+            "where s.uuid = :shopUUID " +
+            "and o.status = :status")
     Page<Order> findByShopUUIDAndStatus(UUID shopUUID, EOrderStatus status, Pageable pageable);
 
     void deleteByUuid(UUID uuid);

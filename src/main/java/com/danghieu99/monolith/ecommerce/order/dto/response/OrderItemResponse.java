@@ -10,9 +10,6 @@ import lombok.Data;
 public class OrderItemResponse {
 
     @NotBlank
-    private final String productUUID;
-
-    @NotBlank
     private final String variantUUID;
 
     @NotNull

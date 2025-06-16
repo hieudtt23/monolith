@@ -14,7 +14,6 @@ import com.danghieu99.monolith.ecommerce.product.repository.jpa.ProductRepositor
 import com.danghieu99.monolith.ecommerce.product.repository.jpa.VariantRepository;
 import com.danghieu99.monolith.ecommerce.product.repository.jpa.join.ProductImageRepository;
 import com.danghieu99.monolith.ecommerce.product.repository.jpa.join.VariantImageRepository;
-import com.danghieu99.monolith.ecommerce.product.service.image.CloudinaryImageService;
 import com.danghieu99.monolith.ecommerce.product.service.image.ImageService;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotBlank;
@@ -40,19 +39,19 @@ public class SellerProductImageService {
     private final VariantRepository variantRepository;
     private final VariantImageRepository variantImageRepository;
     private final ProductRepository productRepository;
-    private final CloudinaryImageService cloudinaryImageService;
 
     public SellerProductImageService(@Qualifier("product-cloudinary-image-service") ImageService imageService,
                                      ImageRepository imageRepository,
                                      ProductImageRepository productImageRepository,
-                                     VariantRepository variantRepository, VariantImageRepository variantImageRepository, ProductRepository productRepository, CloudinaryImageService cloudinaryImageService) {
+                                     VariantRepository variantRepository,
+                                     VariantImageRepository variantImageRepository,
+                                     ProductRepository productRepository) {
         this.imageService = imageService;
         this.imageRepository = imageRepository;
         this.productImageRepository = productImageRepository;
         this.variantRepository = variantRepository;
         this.variantImageRepository = variantImageRepository;
         this.productRepository = productRepository;
-        this.cloudinaryImageService = cloudinaryImageService;
     }
 
     @Transactional
@@ -124,7 +123,7 @@ public class SellerProductImageService {
     @Transactional
     public void deleteProductImageByToken(@NotBlank final String token) {
         try {
-            var delete = cloudinaryImageService.deleteImage(token);
+            var delete = imageService.deleteImage(token);
             delete.join();
             if (!delete.isCompletedExceptionally()) {
                 imageRepository.deleteByToken(token);

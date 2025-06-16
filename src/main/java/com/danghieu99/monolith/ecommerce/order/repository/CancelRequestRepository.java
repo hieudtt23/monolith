@@ -19,9 +19,9 @@ public interface CancelRequestRepository extends JpaRepository<CancelRequest, In
 
     @Query("select cancelRequest from CancelRequest cancelRequest " +
             "join Order order " +
-            "on cancelRequest.orderId = order.uuid " +
+            "on cancelRequest.orderId = order.id " +
             "join Shop shop " +
-            "on shop.uuid = order.shopUUID " +
+            "on shop.id = order.shopId " +
             "where shop.accountUUID = :shopAccountUUID")
     Page<CancelRequest> findByShopAccountUUID(String shopAccountUUID, Pageable pageable);
 

@@ -3,12 +3,10 @@ package com.danghieu99.monolith.ecommerce.order.service;
 import com.danghieu99.monolith.common.exception.ResourceNotFoundException;
 import com.danghieu99.monolith.ecommerce.order.constant.ECancelStatus;
 import com.danghieu99.monolith.ecommerce.order.constant.EOrderStatus;
-import com.danghieu99.monolith.ecommerce.order.dto.kafka.CancelOrderKafkaMessage;
 import com.danghieu99.monolith.ecommerce.order.dto.request.ProcessCancelRequestRequest;
 import com.danghieu99.monolith.ecommerce.order.dto.response.CancelOrderRequestDetailsResponse;
 import com.danghieu99.monolith.ecommerce.order.dto.response.OrderDetailsResponse;
 import com.danghieu99.monolith.ecommerce.order.entity.CancelRequest;
-import com.danghieu99.monolith.ecommerce.order.kafka.producer.CancelOrderKafkaProducer;
 import com.danghieu99.monolith.ecommerce.order.mapper.OrderMapper;
 import com.danghieu99.monolith.ecommerce.order.repository.CancelRequestRepository;
 import com.danghieu99.monolith.ecommerce.order.repository.OrderRepository;
@@ -31,10 +29,8 @@ public class SellerOrderService {
     private final OrderRepository orderRepository;
     private final OrderMapper orderMapper;
     private final CancelRequestRepository cancelRequestRepository;
-    private final CancelOrderKafkaProducer cancelOrderKafkaProducer;
 
-    public Page<OrderDetailsResponse> getAllOrdersByCurrentShop(@NotNull UserDetailsImpl userDetails,
-                                                                @NotNull Pageable pageable) {
+    public Page<OrderDetailsResponse> getAllOrdersByCurrentShop(@NotNull UserDetailsImpl userDetails, @NotNull Pageable pageable) {
         var orders = orderRepository.findByShopUUID(UUID.fromString(userDetails.getUuid()), pageable);
         return orders.map(orderMapper::toOrderDetailsResponse);
     }
@@ -59,14 +55,9 @@ public class SellerOrderService {
         CancelRequest cancelRequest = cancelRequestRepository.findByUuid(UUID.fromString(request.getCancelRequestUUID()))
                 .orElseThrow(() -> new ResourceNotFoundException("CancelRequest", "uuid", request.getCancelRequestUUID()));
         if (request.isAccept()) {
-            CancelOrderKafkaMessage message = CancelOrderKafkaMessage.builder()
-                    .orderId(cancelRequest.getOrderId())
-                    .reason(cancelRequest.getReason())
-                    .build();
-            cancelOrderKafkaProducer.send(message);
-            cancelRequestRepository.updateStatusByUuid(UUID.fromString(request.getCancelRequestUUID()), ECancelStatus.ACCEPTED);
+            cancelRequestRepository.updateStatusByUuid(cancelRequest.getUuid(), ECancelStatus.ACCEPTED);
         } else {
-            cancelRequestRepository.updateStatusByUuid(UUID.fromString(request.getCancelRequestUUID()), ECancelStatus.DENIED);
+            cancelRequestRepository.updateStatusByUuid(cancelRequest.getUuid(), ECancelStatus.DENIED);
         }
     }
 }

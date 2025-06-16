@@ -1,4 +1,4 @@
-package com.danghieu99.monolith.ecommerce.order.dto;
+package com.danghieu99.monolith.ecommerce.order.dto.request;
 
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -7,9 +7,7 @@ import lombok.Data;
 
 @Data
 @Builder
-public class OrderItem {
-    @NotEmpty
-    private final String productUUID;
+public class OrderItemRequest {
 
     @NotEmpty
     private final String variantUUID;

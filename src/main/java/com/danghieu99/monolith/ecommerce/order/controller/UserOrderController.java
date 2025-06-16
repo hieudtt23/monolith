@@ -4,12 +4,12 @@ import com.danghieu99.monolith.ecommerce.order.dto.request.CancelOrderRequest;
 import com.danghieu99.monolith.ecommerce.order.dto.request.UserPlaceOrderRequest;
 import com.danghieu99.monolith.ecommerce.order.dto.request.UserUpdateOrderAddressRequest;
 import com.danghieu99.monolith.ecommerce.order.dto.response.OrderDetailsResponse;
-import com.danghieu99.monolith.ecommerce.order.dto.response.PlaceOrderResponse;
 import com.danghieu99.monolith.ecommerce.order.service.UserOrderService;
 import com.danghieu99.monolith.security.config.auth.UserDetailsImpl;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -31,13 +31,9 @@ public class UserOrderController {
 
     @PostMapping("/place")
     @Transactional
-    public PlaceOrderResponse place(@RequestBody UserPlaceOrderRequest request,
-                                    @AuthenticationPrincipal @NotNull UserDetailsImpl userDetails) {
-        userOrderService.place(request, userDetails);
-        return PlaceOrderResponse.builder()
-                .success(true)
-                .message("Place order success!")
-                .build();
+    public ResponseEntity<?> place(@RequestBody UserPlaceOrderRequest request,
+                                   @AuthenticationPrincipal @NotNull UserDetailsImpl userDetails) {
+        return ResponseEntity.ok(userOrderService.place(request, userDetails));
     }
 
     @PostMapping("/cancel")
@@ -48,7 +44,7 @@ public class UserOrderController {
     }
 
     @PatchMapping("/update-address")
-    public void updateOrderAddress(UserUpdateOrderAddressRequest request, UserDetailsImpl userDetails) {
-        userOrderService.updateOrderAddress(request, userDetails);
+    public void updateOrderAddress(UserUpdateOrderAddressRequest request) {
+        userOrderService.updateOrderAddress(request);
     }
 }
