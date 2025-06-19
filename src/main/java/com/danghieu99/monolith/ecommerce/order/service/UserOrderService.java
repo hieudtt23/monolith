@@ -1,5 +1,6 @@
 package com.danghieu99.monolith.ecommerce.order.service;
 
+import com.danghieu99.monolith.common.exception.ResourceNotAvailableException;
 import com.danghieu99.monolith.common.exception.ResourceNotFoundException;
 import com.danghieu99.monolith.ecommerce.order.dto.request.CancelOrderRequest;
 import com.danghieu99.monolith.ecommerce.order.dto.request.UserUpdateOrderAddressRequest;
@@ -22,6 +23,7 @@ import com.danghieu99.monolith.security.config.auth.UserDetailsImpl;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -31,6 +33,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UserOrderService {
 
     private final OrderRepository orderRepository;
@@ -61,21 +64,29 @@ public class UserOrderService {
         Order savedOrder = orderRepository.save(newOrder);
         List<OrderItemResponse> failed = new ArrayList<>();
         request.getItems().forEach(requestItem -> {
-            int decrementStockResult = variantRepository.decrementStockIfAvailableByUUID(UUID.fromString(requestItem.getVariantUUID()), requestItem.getQuantity());
-            if (decrementStockResult == 0) {
+            try {
+                int decrementStockResult = variantRepository.decrementStockIfAvailableByUUID(UUID.fromString(requestItem.getVariantUUID()), requestItem.getQuantity());
+                if (decrementStockResult == 0) {
+                    throw new ResourceNotAvailableException("Variant", "uuid", requestItem.getVariantUUID());
+                } else {
+                    OrderItem newOrderItem = OrderItem.builder()
+                            .orderId(savedOrder.getId())
+                            .variantId(variantRepository.findByUuid(UUID.fromString(requestItem.getVariantUUID()))
+                                    .orElseThrow(() -> new ResourceNotFoundException("Variant,", "uuid", requestItem.getVariantUUID()))
+                                    .getId())
+                            .quantity(requestItem.getQuantity())
+                            .build();
+                    orderItems.add(newOrderItem);
+                }
+            } catch (Exception e) {
+                log.error(e.getMessage());
                 failed.add(orderMapper.toOrderItemResponse(requestItem));
-            } else {
-                OrderItem newOrderItem = OrderItem.builder()
-                        .orderId(savedOrder.getId())
-                        .variantId(variantRepository.findByUuid(UUID.fromString(requestItem.getVariantUUID()))
-                                .orElseThrow(() -> new ResourceNotFoundException("Variant,", "uuid", requestItem.getVariantUUID()))
-                                .getId())
-                        .quantity(requestItem.getQuantity())
-                        .build();
-                orderItems.add(newOrderItem);
             }
         });
-        orderItemRepository.saveAll(orderItems);
+        var savedItems = orderItemRepository.saveAll(orderItems);
+        if (savedItems.isEmpty()) {
+            throw new RuntimeException("No order items saved");
+        }
         PlaceOrderResponse response = new PlaceOrderResponse();
         if (!failed.isEmpty()) {
             response.setFailed(failed);

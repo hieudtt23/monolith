@@ -3,7 +3,6 @@ package com.danghieu99.monolith.ecommerce.order.controller;
 import com.danghieu99.monolith.ecommerce.order.dto.request.CancelOrderRequest;
 import com.danghieu99.monolith.ecommerce.order.dto.request.UserPlaceOrderRequest;
 import com.danghieu99.monolith.ecommerce.order.dto.request.UserUpdateOrderAddressRequest;
-import com.danghieu99.monolith.ecommerce.order.dto.response.OrderDetailsResponse;
 import com.danghieu99.monolith.ecommerce.order.service.UserOrderService;
 import com.danghieu99.monolith.security.config.auth.UserDetailsImpl;
 import jakarta.transaction.Transactional;
@@ -14,8 +13,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/api/v1/user/order")
 @RequiredArgsConstructor
@@ -25,8 +22,8 @@ public class UserOrderController {
     private final UserOrderService userOrderService;
 
     @GetMapping("")
-    public List<OrderDetailsResponse> getAllByCurrentUser(@AuthenticationPrincipal @NotNull UserDetailsImpl userDetails) {
-        return userOrderService.getAllByCurrentUser(userDetails);
+    public ResponseEntity<?> getAllByCurrentUser(@AuthenticationPrincipal @NotNull UserDetailsImpl userDetails) {
+        return ResponseEntity.ok(userOrderService.getAllByCurrentUser(userDetails));
     }
 
     @PostMapping("/place")
