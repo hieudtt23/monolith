@@ -7,7 +7,7 @@ import lombok.Data;
 
 @Data
 @Builder
-public class ShippingAddress {
+public class OrderAddressRequest {
 
     @NotBlank
     private final String name;

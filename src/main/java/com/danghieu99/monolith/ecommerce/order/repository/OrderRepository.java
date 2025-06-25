@@ -26,7 +26,7 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
     @Query("update Order o " +
             "set o.status = :status " +
             "where o.uuid = :uuid")
-    Order updateOrderStatus(UUID uuid, EOrderStatus status);
+    int updateOrderStatusByUUID(UUID uuid, EOrderStatus status);
 
     @Modifying
     @Transactional
@@ -34,7 +34,7 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
             "set o.status  = :status," +
             "o.details = :details " +
             "where o.uuid = :uuid")
-    void updateOrderStatusAndDetails(UUID uuid, EOrderStatus status, String details);
+    int updateOrderStatusAndDetails(UUID uuid, EOrderStatus status, String details);
 
     Page<Order> findByShopId(int shopId, Pageable pageable);
 

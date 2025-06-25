@@ -47,15 +47,13 @@ public class SellerProductService {
     private final CategoryRepository categoryRepository;
     private final AttributeRepository attributeRepository;
 
-    public Page<ProductDetailsResponse> getAllByCurrentShop(@NotNull UserDetailsImpl userDetails,
-                                                            @NotNull Pageable pageable) {
+    public Page<ProductDetailsResponse> getAllByCurrentShop(@NotNull UserDetailsImpl userDetails, @NotNull Pageable pageable) {
         Page<Product> products = productRepository.findByShopUUID(UUID.fromString(userDetails.getUuid()), pageable);
         return products.map(productMapper::toGetProductDetailsResponse);
     }
 
     @Transactional
-    public void saveProductToCurrentShop(@NotNull UserDetailsImpl userDetails,
-                                         @NotNull SaveProductRequest request) {
+    public void saveProductToCurrentShop(@NotNull UserDetailsImpl userDetails, @NotNull SaveProductRequest request) {
         Set<ProductCategory> productCategories = new HashSet<>();
 
         Product newProduct = productMapper.toProduct(request);
@@ -78,8 +76,7 @@ public class SellerProductService {
     }
 
     @Transactional
-    public void updateProductDetailsByUUID(@NotBlank String uuid,
-                                           @NotNull UpdateProductDetailsRequest request) {
+    public void updateProductDetailsByUUID(@NotBlank String uuid, @NotNull UpdateProductDetailsRequest request) {
         var product = productRepository.findByUuid(UUID.fromString(uuid))
                 .orElseThrow(() -> new ResourceNotFoundException("Product", "uuid", uuid));
         if (request.getName() != null && !request.getName().isBlank()) {
@@ -100,8 +97,7 @@ public class SellerProductService {
     }
 
     @Transactional
-    public Page<VariantDetailsResponse> getVariantsByProductUUID(@NotBlank String productUUID,
-                                                                 @NotNull Pageable pageable) {
+    public Page<VariantDetailsResponse> getVariantsByProductUUID(@NotBlank String productUUID, @NotNull Pageable pageable) {
         return variantRepository.findByProductUuid(UUID.fromString(productUUID), pageable).map(variantMapper::toResponse);
     }
 
@@ -119,8 +115,7 @@ public class SellerProductService {
     }
 
     @Transactional
-    public void saveVariantsByProductId(@NotNull int productId,
-                                        @NotEmpty List<@NotNull SaveVariantRequest> request) {
+    public void saveVariantsByProductId(@NotNull int productId, @NotEmpty List<@NotNull SaveVariantRequest> request) {
         List<VariantAttribute> variantAttributes = new ArrayList<>();
         List<Variant> variants = new ArrayList<>();
         List<Attribute> attributes = new ArrayList<>();
@@ -157,9 +152,7 @@ public class SellerProductService {
     }
 
     @Transactional
-    public void deleteAttributeByProductUUIDTypeValue(String productUUID,
-                                                      String type,
-                                                      String value) {
+    public void deleteAttributeByProductUUIDTypeValue(@NotBlank String productUUID, @NotBlank String type, @NotBlank String value) {
         UUID uuid = UUID.fromString(productUUID);
         var attributeUUID = attributeRepository
                 .findByProductUUIDAttributeTypeValueContainsIgnoreCase(uuid, type, value)

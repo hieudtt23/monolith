@@ -17,9 +17,14 @@ import com.danghieu99.monolith.ecommerce.order.repository.CancelRequestRepositor
 import com.danghieu99.monolith.ecommerce.order.repository.OrderAddressRepository;
 import com.danghieu99.monolith.ecommerce.order.repository.OrderItemRepository;
 import com.danghieu99.monolith.ecommerce.order.repository.OrderRepository;
+import com.danghieu99.monolith.ecommerce.product.repository.jpa.ProductRepository;
 import com.danghieu99.monolith.ecommerce.product.repository.jpa.ShopRepository;
 import com.danghieu99.monolith.ecommerce.product.repository.jpa.VariantRepository;
+import com.danghieu99.monolith.email.dto.SendEmailRequest;
+import com.danghieu99.monolith.email.repository.EmailTemplateRepository;
+import com.danghieu99.monolith.email.service.SendEmailToKafkaService;
 import com.danghieu99.monolith.security.config.auth.UserDetailsImpl;
+import com.danghieu99.monolith.security.repository.jpa.AccountRepository;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +34,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -36,6 +42,7 @@ import java.util.UUID;
 @Slf4j
 public class UserOrderService {
 
+    private final ProductRepository productRepository;
     private final OrderRepository orderRepository;
     private final OrderMapper orderMapper;
     private final OrderItemRepository orderItemRepository;
@@ -43,6 +50,9 @@ public class UserOrderService {
     private final ShopRepository shopRepository;
     private final OrderAddressRepository orderAddressRepository;
     private final CancelRequestRepository cancelRequestRepository;
+    private final SendEmailToKafkaService sendEmailToKafkaService;
+    private final AccountRepository accountRepository;
+    private final EmailTemplateRepository emailTemplateRepository;
 
     public List<OrderDetailsResponse> getAllByCurrentUser(@NotNull UserDetailsImpl userDetails) {
         return orderRepository.findByUserAccountUUID(UUID.fromString(userDetails.getUuid())).stream().map(order -> {
@@ -54,30 +64,32 @@ public class UserOrderService {
 
     @Transactional
     public PlaceOrderResponse place(@NotNull UserPlaceOrderRequest request, @NotNull UserDetailsImpl userDetails) {
-        List<OrderItem> orderItems = new ArrayList<>();
-        Order newOrder = Order.builder()
+        Order savedOrder = orderRepository.save(Order.builder()
                 .shopId(shopRepository.findByUuid(UUID.fromString(request.getShopUUID()))
                         .orElseThrow(() -> new ResourceNotFoundException("Shop", "uuid", request.getShopUUID()))
                         .getId())
                 .userAccountUUID(UUID.fromString(userDetails.getUuid()))
-                .build();
-        Order savedOrder = orderRepository.save(newOrder);
+                .build());
+        orderAddressRepository.save(orderMapper.toOrderAddress(request.getAddress()));
+        List<OrderItem> orderItems = new ArrayList<>();
         List<OrderItemResponse> failed = new ArrayList<>();
         request.getItems().forEach(requestItem -> {
             try {
                 int decrementStockResult = variantRepository.decrementStockIfAvailableByUUID(UUID.fromString(requestItem.getVariantUUID()), requestItem.getQuantity());
                 if (decrementStockResult == 0) {
                     throw new ResourceNotAvailableException("Variant", "uuid", requestItem.getVariantUUID());
-                } else {
-                    OrderItem newOrderItem = OrderItem.builder()
-                            .orderId(savedOrder.getId())
-                            .variantId(variantRepository.findByUuid(UUID.fromString(requestItem.getVariantUUID()))
-                                    .orElseThrow(() -> new ResourceNotFoundException("Variant,", "uuid", requestItem.getVariantUUID()))
-                                    .getId())
-                            .quantity(requestItem.getQuantity())
-                            .build();
-                    orderItems.add(newOrderItem);
                 }
+                OrderItem newOrderItem = OrderItem.builder()
+                        .orderId(savedOrder.getId())
+                        .productId(productRepository.findByUuid(UUID.fromString(requestItem.getProductUUID()))
+                                .orElseThrow(() -> new ResourceNotFoundException("Product", "uuid", requestItem.getProductUUID()))
+                                .getId())
+                        .variantId(variantRepository.findByUuid(UUID.fromString(requestItem.getVariantUUID()))
+                                .orElseThrow(() -> new ResourceNotFoundException("Variant,", "uuid", requestItem.getVariantUUID()))
+                                .getId())
+                        .quantity(requestItem.getQuantity())
+                        .build();
+                orderItems.add(newOrderItem);
             } catch (Exception e) {
                 log.error(e.getMessage());
                 failed.add(orderMapper.toOrderItemResponse(requestItem));
@@ -86,6 +98,22 @@ public class UserOrderService {
         var savedItems = orderItemRepository.saveAll(orderItems);
         if (savedItems.isEmpty()) {
             throw new RuntimeException("No order items saved");
+        }
+        if (emailTemplateRepository.findByName("placeOrder").isPresent()) {
+            sendEmailToKafkaService.send(SendEmailRequest.builder()
+                    .to(List.of(accountRepository.findEmailByAccountUUID(UUID.fromString(userDetails.getUuid()))))
+                    .templateName("placeOrder")
+                    .templateParams(Map.of(
+                            "orderNumber", savedOrder.getUuid().toString(),
+                            "userName", userDetails.getUsername(),
+                            "address", request.getAddress().toString()
+                    )).build());
+        } else {
+            sendEmailToKafkaService.send(SendEmailRequest.builder()
+                    .to(List.of(accountRepository.findEmailByAccountUUID(UUID.fromString(userDetails.getUuid()))))
+                    .subject("Order Placement Successful")
+                    .plainText("Order " + savedOrder.getUuid() + ", userName " + userDetails.getUsername() + ", Address " + request.getAddress() + " has been placed.")
+                    .build());
         }
         PlaceOrderResponse response = new PlaceOrderResponse();
         if (!failed.isEmpty()) {

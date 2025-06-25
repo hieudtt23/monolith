@@ -7,10 +7,16 @@ import com.danghieu99.monolith.ecommerce.order.dto.request.ProcessCancelRequestR
 import com.danghieu99.monolith.ecommerce.order.dto.response.CancelOrderRequestDetailsResponse;
 import com.danghieu99.monolith.ecommerce.order.dto.response.OrderDetailsResponse;
 import com.danghieu99.monolith.ecommerce.order.entity.CancelRequest;
+import com.danghieu99.monolith.ecommerce.order.entity.Order;
 import com.danghieu99.monolith.ecommerce.order.mapper.OrderMapper;
 import com.danghieu99.monolith.ecommerce.order.repository.CancelRequestRepository;
 import com.danghieu99.monolith.ecommerce.order.repository.OrderRepository;
+import com.danghieu99.monolith.email.dto.SendEmailRequest;
+import com.danghieu99.monolith.email.repository.EmailTemplateRepository;
+import com.danghieu99.monolith.email.service.SendEmailToKafkaService;
 import com.danghieu99.monolith.security.config.auth.UserDetailsImpl;
+import com.danghieu99.monolith.security.entity.Account;
+import com.danghieu99.monolith.security.repository.jpa.AccountRepository;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
@@ -19,18 +25,23 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-// TODO: write to  transactional outbox table -> debezium write to kafka
 public class SellerOrderService {
 
     private final OrderRepository orderRepository;
     private final OrderMapper orderMapper;
     private final CancelRequestRepository cancelRequestRepository;
+    private final AccountRepository accountRepository;
+    private final SendEmailToKafkaService sendEmailToKafkaService;
+    private final EmailTemplateRepository emailTemplateRepository;
 
-    public Page<OrderDetailsResponse> getAllOrdersByCurrentShop(@NotNull UserDetailsImpl userDetails, @NotNull Pageable pageable) {
+    public Page<OrderDetailsResponse> getAllOrdersByCurrentShop(@NotNull UserDetailsImpl userDetails,
+                                                                @NotNull Pageable pageable) {
         var orders = orderRepository.findByShopUUID(UUID.fromString(userDetails.getUuid()), pageable);
         return orders.map(orderMapper::toOrderDetailsResponse);
     }
@@ -44,11 +55,11 @@ public class SellerOrderService {
 
     public Page<CancelOrderRequestDetailsResponse> getCancelOrderRequestsByCurrentShop(@NotNull UserDetailsImpl userDetails,
                                                                                        @NotNull Pageable pageable) {
-
         var cancels = cancelRequestRepository.findByShopAccountUUID(userDetails.getUuid(), pageable);
         return cancels.map(orderMapper::toCancelOrderRequestDetails);
     }
 
+    //process refund
     @Async
     @Transactional
     public void processCancelRequest(@NotNull ProcessCancelRequestRequest request) {
@@ -56,8 +67,29 @@ public class SellerOrderService {
                 .orElseThrow(() -> new ResourceNotFoundException("CancelRequest", "uuid", request.getCancelRequestUUID()));
         if (request.isAccept()) {
             cancelRequestRepository.updateStatusByUuid(cancelRequest.getUuid(), ECancelStatus.ACCEPTED);
+            orderRepository.updateOrderStatusByUUID(cancelRequest.getUuid(), EOrderStatus.CANCELED);
         } else {
             cancelRequestRepository.updateStatusByUuid(cancelRequest.getUuid(), ECancelStatus.DENIED);
+        }
+        Account account = accountRepository.findByUuid(cancelRequest.getUserAccountUUID())
+                .orElseThrow(() -> new ResourceNotFoundException("Account", "uuid", cancelRequest.getUserAccountUUID()));
+        Order order = orderRepository.findById(cancelRequest.getOrderId())
+                .orElseThrow(() -> new ResourceNotFoundException("Order", "id", cancelRequest.getOrderId()));
+        if (emailTemplateRepository.findByName("cancelOrder").isPresent()) {
+            sendEmailToKafkaService.send(SendEmailRequest.builder()
+                    .to(List.of(account.getEmail()))
+                    .templateName("cancelOrder")
+                    .templateParams(Map.of(
+                            "orderNumber", order.getUuid().toString(),
+                            "userName", account.getUsername(),
+                            "status", cancelRequest.getStatus().name()
+                    )).build());
+        } else {
+            sendEmailToKafkaService.send(SendEmailRequest.builder()
+                    .to(List.of(account.getEmail()))
+                    .subject("Order Cancel Success")
+                    .plainText("Order " + order.getUuid() + ", userName " + account.getUsername() + ", status " + cancelRequest.getStatus().name() + " has been placed.")
+                    .build());
         }
     }
 }

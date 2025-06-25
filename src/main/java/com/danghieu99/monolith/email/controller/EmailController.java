@@ -21,7 +21,7 @@ public class EmailController {
 
     @PostMapping("/send")
     public ResponseEntity<?> send(@Valid @RequestBody SendEmailRequest sendEmailRequest) {
-        sendEmailToKafkaService.sendToKafka(sendEmailRequest);
+        sendEmailToKafkaService.send(sendEmailRequest);
         return ResponseEntity.ok().build();
     }
 }

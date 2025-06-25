@@ -23,7 +23,10 @@ public class OrderItem extends BaseEntity {
     @Column(nullable = false)
     private int orderId;
 
-    @Column(name = "variant_uuid", nullable = false)
+    @Column(nullable = false)
+    private int productId;
+
+    @Column(nullable = false)
     private int variantId;
 
     @Column(nullable = false)

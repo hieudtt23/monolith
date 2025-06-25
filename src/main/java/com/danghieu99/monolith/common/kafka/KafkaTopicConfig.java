@@ -13,11 +13,8 @@ import java.util.Map;
 @Configuration
 public class KafkaTopicConfig {
 
-    @Value("${spring.kafka.topics.order.place}")
-    private String placeOrderTopicName;
-
-    @Value("${spring.kafka.topics.order.cancel}")
-    private String cancelOrderTopicName;
+    @Value("${spring.kafka.topics.email.send}")
+    private String sendEmailTopic;
 
     @Bean
     public KafkaAdmin kafkaAdmin() {
@@ -29,9 +26,7 @@ public class KafkaTopicConfig {
     @Bean
     public KafkaAdmin.NewTopics orderTopics() {
         return new KafkaAdmin.NewTopics(
-                TopicBuilder.name(placeOrderTopicName)
-                        .build(),
-                TopicBuilder.name(cancelOrderTopicName)
+                TopicBuilder.name(sendEmailTopic)
                         .build()
         );
     }

@@ -1,6 +1,6 @@
 package com.danghieu99.monolith.ecommerce.order.dto.request;
 
-import com.danghieu99.monolith.ecommerce.order.dto.ShippingAddress;
+import com.danghieu99.monolith.ecommerce.order.dto.OrderAddressRequest;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
@@ -16,7 +16,7 @@ public class UserPlaceOrderRequest {
     private final String shopUUID;
 
     @NotNull
-    private final ShippingAddress address;
+    private final OrderAddressRequest address;
 
     @NotNull
     private String shipmentProviderUUID;

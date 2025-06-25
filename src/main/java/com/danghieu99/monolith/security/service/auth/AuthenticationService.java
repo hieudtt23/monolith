@@ -134,13 +134,13 @@ public class AuthenticationService {
                 .build();
         accountRoleRepository.save(accountRole);
 
-        //replace with template
+        //use template
         String code = UUID.randomUUID().toString();
         confirmCodeService.save(savedAccount.getUuid().toString(), code, "email");
-        sendEmailToKafkaService.sendToKafka(SendEmailRequest.builder()
+        sendEmailToKafkaService.send(SendEmailRequest.builder()
                 .from(List.of(fromEmail))
                 .to(List.of(request.getEmail()))
-                .subject("email confirm code")
+                .subject("Email Confirmation Code")
                 .plainText(code)
                 .build());
 

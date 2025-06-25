@@ -28,7 +28,7 @@ public class ShopInitService {
                 shops.add(Shop.builder()
                         .name("Default shop " + seller.getPhone())
                         .description("Default shop description " + seller.getPhone())
-                        .accountUUID(seller.getUuid().toString())
+                        .accountUUID(seller.getUuid())
                         .status(seller.getId() % 5 != 0 ? EShopStatus.SHOP_ACTIVE : EShopStatus.SHOP_INACTIVE)
                         .build());
             });

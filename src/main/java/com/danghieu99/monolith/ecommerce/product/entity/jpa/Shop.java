@@ -5,6 +5,8 @@ import com.danghieu99.monolith.ecommerce.product.constant.EShopStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.UUID;
+
 @Entity
 @Table(name = "shops")
 @Getter
@@ -22,7 +24,7 @@ public class Shop extends BaseEntity {
     private String description;
 
     @Column(name = "account_uuid", nullable = false, unique = true, updatable = false)
-    private String accountUUID;
+    private UUID accountUUID;
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)

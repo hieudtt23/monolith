@@ -8,7 +8,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -30,10 +29,14 @@ import java.util.Set;
 @Slf4j
 public class SendEmailService {
 
+    @Value("${spring.mail.from.address}")
+    private String fromAddress;
+    @Value("${spring.mail.from.name}")
+    private String fromName;
+
     private final JavaMailSender mailSender;
     private final TemplateEngine templateEngine;
-    @Value("${spring.mail.from}")
-    private String from;
+
 
     @Retryable
     @Async
@@ -41,7 +44,7 @@ public class SendEmailService {
     public void send(SendEmailKafkaRequest request) {
         try {
             MimeMessage mimeMessage = mailSender.createMimeMessage();
-            MimeMessageHelper helper = this.prepareMessage(mimeMessage, request, from);
+            MimeMessageHelper helper = this.prepareMessage(mimeMessage, request, fromAddress, fromName);
             if (request.getTemplateName() != null && !request.getTemplateName().isBlank()) {
                 Context ctx = this.prepareContext(request);
                 String processedContent = templateEngine.process(request.getTemplateName(), ctx);
@@ -92,9 +95,9 @@ public class SendEmailService {
     }
 
     @SneakyThrows
-    private MimeMessageHelper prepareMessage(MimeMessage mimeMessage, SendEmailKafkaRequest request, String from) {
+    private MimeMessageHelper prepareMessage(MimeMessage mimeMessage, SendEmailKafkaRequest request, String fromAddress, String fromName) {
         MimeMessageHelper message = new MimeMessageHelper(mimeMessage, MimeMessageHelper.MULTIPART_MODE_MIXED_RELATED, "UTF-8");
-        message.setFrom(from);
+        message.setFrom(fromAddress, fromName);
         message.setTo(request.getTo());
         if (request.getCc() != null && request.getCc().length > 0) {
             message.setCc(request.getCc());

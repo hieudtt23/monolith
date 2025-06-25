@@ -9,15 +9,18 @@ import com.danghieu99.monolith.ecommerce.product.entity.jpa.join.ProductShop;
 import com.danghieu99.monolith.ecommerce.product.entity.jpa.join.VariantAttribute;
 import com.danghieu99.monolith.ecommerce.product.repository.jpa.AttributeRepository;
 import com.danghieu99.monolith.ecommerce.product.repository.jpa.ProductRepository;
+import com.danghieu99.monolith.ecommerce.product.repository.jpa.ShopRepository;
 import com.danghieu99.monolith.ecommerce.product.repository.jpa.VariantRepository;
 import com.danghieu99.monolith.ecommerce.product.repository.jpa.join.ProductCategoryRepository;
 import com.danghieu99.monolith.ecommerce.product.repository.jpa.join.ProductShopRepository;
 import com.danghieu99.monolith.ecommerce.product.repository.jpa.join.VariantAttributeRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.RandomUtils;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.Random;
 import java.util.stream.IntStream;
 
 @Service
@@ -30,20 +33,21 @@ public class ProductInitService {
     private final AttributeRepository attributeRepository;
     private final ProductCategoryRepository pCategoryRepository;
     private final VariantAttributeRepository vAttributeRepository;
+    private final ShopRepository shopRepository;
 
     @Transactional
     public void init() {
         if (productRepository.findAll().isEmpty()) {
-            IntStream.range(1, 500).parallel().forEach(i -> {
+            shopRepository.findAll().forEach(shop -> {
                 var savedProduct = productRepository.save(Product.builder()
-                        .name("Default product " + i)
-                        .description("Default product description " + i)
+                        .name("Default product " + shop)
+                        .description("Default product description " + shop)
                         .status(EProductStatus.LISTED)
-                        .basePrice(BigDecimal.valueOf(i))
+                        .basePrice(BigDecimal.valueOf(Math.random()))
                         .build());
                 pShopRepository.save(ProductShop.builder()
                         .productId(savedProduct.getId())
-                        .shopId(i)
+                        .shopId(shop.getId())
                         .build());
 
                 IntStream.range(1, 5).parallel().forEach(j -> {
@@ -74,6 +78,7 @@ public class ProductInitService {
                     });
                 });
             });
+
         }
     }
 }

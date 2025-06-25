@@ -28,7 +28,7 @@ public class SendEmailToKafkaService {
 
     @Async
     @Transactional
-    public void sendToKafka(SendEmailRequest request) {
+    public void send(SendEmailRequest request) {
         SendEmailKafkaRequest kafkaRequest = emailMapper.toSendEmailKafkaRequest(request);
         if (request.getFiles() != null && !request.getFiles().isEmpty()) {
             kafkaRequest.setAttachments(request.getFiles().parallelStream().map(file -> {

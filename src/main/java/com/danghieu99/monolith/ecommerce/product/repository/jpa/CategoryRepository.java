@@ -16,13 +16,18 @@ public interface CategoryRepository extends JpaRepository<Category, Integer> {
 
     Optional<Category> findByName(String name);
 
-    @Query("select c from Category c join Category sc on c.superCategoryId = sc.id where sc.uuid = :superCategoryUUID")
+    @Query("select c from Category c " +
+            "join Category sc on c.superCategoryId = sc.id " +
+            "where sc.uuid = :superCategoryUUID")
     Page<Category> findBySuperCategoryUUID(UUID superCategoryUUID, Pageable pageable);
 
-    @Query("select sc from Category c join Category sc on c.superCategoryId = sc.id where c.uuid = :subcategoryUUID")
+    @Query("select sc from Category c " +
+            "join Category sc on c.superCategoryId = sc.id " +
+            "where c.uuid = :subcategoryUUID")
     Page<Category> findBySubCategoryUUID(UUID subCategoryUUID, Pageable pageable);
 
-    @Query("select c from Category c where c.name like concat('%', :name, '%')")
+    @Query("select c from Category c " +
+            "where c.name like concat('%', :name, '%')")
     Page<Category> findByNameContaining(final String name, final Pageable pageable);
 
     @Query("select c.id from Category c " +
@@ -31,8 +36,8 @@ public interface CategoryRepository extends JpaRepository<Category, Integer> {
 
     @Query("select c from Category c " +
             "join ProductCategory pc on c.id = pc.categoryId " +
-            "join Product p on pc.productId = p.id " +
-            "where p.uuid = :uuid")
+            "join Product p on p.id = pc.productId " +
+            "where p.uuid = :productUUID")
     List<Category> findByProductUUID(UUID productUUID);
 
     @Query("select c from Category c " +

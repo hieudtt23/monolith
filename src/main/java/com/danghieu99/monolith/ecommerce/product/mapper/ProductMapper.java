@@ -19,7 +19,8 @@ public interface ProductMapper {
     @Mappings({@Mapping(target = "categories", ignore = true),
             @Mapping(target = "shopUUID", ignore = true),
             @Mapping(target = "variants", ignore = true),
-            @Mapping(target = "imageTokens", ignore = true)})
+            @Mapping(target = "imageTokens", ignore = true),
+            @Mapping(target = "uuid", ignore = true),})
     ProductDetailsResponse toGetProductDetailsResponse(Product product);
 
     @Mapping(target = "imageToken", ignore = true)

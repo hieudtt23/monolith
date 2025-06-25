@@ -52,6 +52,4 @@ public interface AttributeRepository extends JpaRepository<Attribute, Integer> {
             "join VariantAttribute va on va.attributeId = a.id " +
             "where va.variantId = :variantId")
     Collection<Attribute> findByVariantId(int variantId);
-
-    List<Attribute> uuid(UUID uuid);
 }

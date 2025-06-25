@@ -38,7 +38,7 @@ public class SendEmailRequest extends BaseRequest {
     private String templateName;
 
     @Size(min = 1)
-    private Map<@NotBlank String, @NotBlank String> paramMap;
+    private Map<@NotBlank String, @NotBlank String> templateParams;
 
     @Size(min = 1, max = 5)
     private List<@ValidMultipartFile(maxSize = 26214400, allowedTypes = {}) MultipartFile> files;

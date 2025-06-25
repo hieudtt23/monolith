@@ -81,4 +81,8 @@ public interface AccountRepository extends JpaRepository<Account, Integer> {
             "set a.status = :status " +
             "where a.uuid = :uuid")
     void updateAccountStatusByUUID(UUID uuid, EAccountStatus status);
+
+    @Query("select a.email from Account a " +
+            "where a.uuid = :uuid")
+    String findEmailByAccountUUID(UUID uuid);
 }

@@ -13,6 +13,8 @@ import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.UUID;
+
 @Service
 @RequiredArgsConstructor
 public class SellerShopService {
@@ -24,19 +26,19 @@ public class SellerShopService {
     public ShopDetailsResponse createCurrentUserShop(@NotNull UserDetailsImpl userDetails,
                                                      @NotNull SaveShopRequest request) {
         var newShop = shopMapper.toShop(request);
-        newShop.setAccountUUID(userDetails.getUuid());
+        newShop.setAccountUUID(UUID.fromString(userDetails.getUuid()));
         return shopMapper.toResponse(shopRepository.save(newShop));
     }
 
     @Transactional
     public void deleteCurrentUserShop(@NotNull UserDetailsImpl userDetails) {
-        shopRepository.deleteByAccountUUID(userDetails.getUuid());
+        shopRepository.deleteByAccountUUID(UUID.fromString(userDetails.getUuid()));
     }
 
     @Transactional
     public ShopDetailsResponse editCurrentUserShopDetails(@NotNull UserDetailsImpl userDetails,
                                                           @NotNull UpdateShopDetailsRequest request) {
-        Shop shop = shopRepository.findByAccountUUID(userDetails.getUuid())
+        Shop shop = shopRepository.findByAccountUUID(UUID.fromString(userDetails.getUuid()))
                 .orElseThrow(() -> new ResourceNotFoundException("Shop", "accountUUID", userDetails.getUuid()));
         if (request.getName() != null && !request.getName().isEmpty()) {
             shop.setName(request.getName());

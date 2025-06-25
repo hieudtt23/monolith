@@ -8,10 +8,13 @@ import com.danghieu99.monolith.ecommerce.product.dto.response.VariantDetailsResp
 import com.danghieu99.monolith.ecommerce.product.entity.jpa.Category;
 import com.danghieu99.monolith.ecommerce.product.entity.jpa.Image;
 import com.danghieu99.monolith.ecommerce.product.entity.jpa.Product;
+import com.danghieu99.monolith.ecommerce.product.entity.redis.RecentView;
 import com.danghieu99.monolith.ecommerce.product.mapper.ProductMapper;
 import com.danghieu99.monolith.ecommerce.product.mapper.VariantMapper;
 import com.danghieu99.monolith.ecommerce.product.repository.jpa.*;
 import com.danghieu99.monolith.ecommerce.product.repository.jpa.join.VariantImageRepository;
+import com.danghieu99.monolith.ecommerce.product.repository.redis.RecentViewRepository;
+import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -19,12 +22,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.time.Instant;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -32,14 +34,15 @@ import java.util.UUID;
 public class ProductService {
 
     private final ProductRepository productRepository;
-    private final ProductMapper productMapper;
     private final ShopRepository shopRepository;
     private final CategoryRepository categoryRepository;
     private final VariantRepository variantRepository;
-    private final VariantMapper variantMapper;
     private final ImageRepository imageRepository;
     private final VariantImageRepository variantImageRepository;
     private final AttributeRepository attributeRepository;
+    private final RecentViewRepository recentViewRepository;
+    private final ProductMapper productMapper;
+    private final VariantMapper variantMapper;
 
     public Page<ProductResponse> getAll(Pageable pageable) {
         return productRepository.findAll(pageable).map(this::getProductResponseFromProduct);
@@ -73,8 +76,48 @@ public class ProductService {
         return this.getProductDetailsResponseFromProduct(product);
     }
 
+    //use aop
+    @Transactional
+    protected void saveRecentlyViewed(@NotBlank String accountUUID, @NotBlank String productUUID) {
+        var recentlyViewed = RecentView.builder()
+                .accountUUID(accountUUID)
+                .productUUID(productUUID)
+                .timestamp(Instant.now().toEpochMilli())
+                .build();
+        recentViewRepository.save(recentlyViewed);
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    public Page<ProductResponse> getRecentlyViewedByAccountUUID(@NotBlank String accountUUID, @NotNull Pageable pageable) {
+        return recentViewRepository.findByAccountUUID(accountUUID, pageable).map(recentView -> {
+            try {
+                Product product = productRepository.findByUuid(UUID.fromString(recentView.getProductUUID()))
+                        .orElseThrow(() -> new ResourceNotFoundException("Product", "uuid", recentView.getProductUUID()));
+                return this.getProductResponseFromProduct(product);
+            } catch (Exception e) {
+                log.error("Find product failed, exception: {}", e.getMessage());
+                return null;
+            }
+        });
+    }
+
+    protected ProductResponse getProductResponseFromProduct(@NotNull Product product) {
+        String imgToken = "";
+        var image = imageRepository.findByProductUUIDAndRole(product.getUuid(), EImageRole.FRONT);
+        if (image.isPresent()) {
+            imgToken = image.get().getToken();
+        }
+        return ProductResponse.builder()
+                .uuid(product.getUuid().toString())
+                .name(product.getName())
+                .imageToken(imgToken)
+                .status(product.getStatus())
+                .build();
+    }
+
     protected ProductDetailsResponse getProductDetailsResponseFromProduct(@NotNull Product product) {
         var response = productMapper.toGetProductDetailsResponse(product);
+        response.setUuid(product.getUuid().toString());
         response.setShopUUID(shopRepository.findByProductUuid(product.getUuid())
                 .orElseThrow(() -> new ResourceNotFoundException("Shop", "productUUID", product.getUuid()))
                 .getUuid().toString());
@@ -87,20 +130,18 @@ public class ProductService {
                         attributes.put(attribute.getType(), attribute.getValue());
                     });
             variantResponse.setAttributes(attributes);
-            variantResponse.setImageToken(variantImageRepository.findByVariantId(variant.getId())
-                    .orElseThrow(() -> new ResourceNotFoundException("ImageToken", "id", variant.getId()))
-                    .getImageToken());
+            var variantImage = variantImageRepository.findByVariantId(variant.getId());
+            if (variantImage.isPresent()) {
+                variantResponse.setImageToken(variantImageRepository.findByVariantId(variant.getId())
+                        .orElseThrow(() -> new ResourceNotFoundException("ImageToken", "id", variant.getId()))
+                        .getImageToken());
+            }
             return variantResponse;
         }).toList());
-        response.setImageTokens(imageRepository.findByProductUUID(product.getUuid()).stream().map(Image::getToken).toList());
-        return response;
-    }
-
-    protected ProductResponse getProductResponseFromProduct(@NotNull Product product) {
-        var response = productMapper.toProductResponse(product);
-        response.setImageToken(imageRepository.findByProductUUIDAndRole(product.getUuid(), EImageRole.FRONT)
-                .orElseThrow(() -> new ResourceNotFoundException("Product", "uuid", product.getUuid()))
-                .getToken());
+        var imageTokens = imageRepository.findByProductUUID(product.getUuid());
+        if (!imageTokens.isEmpty()) {
+            response.setImageTokens(imageTokens.stream().map(Image::getToken).toList());
+        }
         return response;
     }
 }
