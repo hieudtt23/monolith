@@ -10,8 +10,6 @@ import com.danghieu99.monolith.security.entity.Account;
 import com.danghieu99.monolith.security.mapper.AccountMapper;
 import com.danghieu99.monolith.security.repository.jpa.AccountRepository;
 import com.danghieu99.monolith.security.repository.jpa.RoleRepository;
-import com.danghieu99.monolith.security.service.auth.AuthenticationService;
-import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -30,10 +28,10 @@ public class UserAccountService {
     private final AuthenticationManager authenticationManager;
     private final RoleRepository roleRepository;
 
-    public UserGetAccountDetailsResponse getPrivateAccountDetailsByUUID(@NotEmpty final String uuid) {
-        var detailsResponse = accountMapper.toUserAccountDetailsResponse(accountRepository.findByUuid(UUID.fromString(uuid))
-                .orElseThrow(() -> new ResourceNotFoundException("Account", "uuid", uuid)));
-        detailsResponse.setRoles(accountMapper.rolesToRoleNames(roleRepository.findByAccountUUID(UUID.fromString(uuid))));
+    public UserGetAccountDetailsResponse getPrivateAccountDetailsByUUID(UserDetailsImpl userDetails) {
+        var detailsResponse = accountMapper.toUserAccountDetailsResponse(accountRepository.findByUuid(UUID.fromString(userDetails.getUuid()))
+                .orElseThrow(() -> new ResourceNotFoundException("Account", "uuid", userDetails.getUuid())));
+        detailsResponse.setRoles(accountMapper.rolesToRoleNames(roleRepository.findByAccountUUID(UUID.fromString(userDetails.getUuid()))));
         return detailsResponse;
     }
 

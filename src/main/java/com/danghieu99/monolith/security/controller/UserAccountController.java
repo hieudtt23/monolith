@@ -23,8 +23,8 @@ public class UserAccountController {
     }
 
     @GetMapping("")
-    public ResponseEntity<?> getPrivateAccountDetails(@RequestParam String uuid) {
-        return ResponseEntity.ok(uAccountService.getPrivateAccountDetailsByUUID(uuid));
+    public ResponseEntity<?> getPrivateAccountDetails(@AuthenticationPrincipal UserDetailsImpl userDetails) {
+        return ResponseEntity.ok(uAccountService.getPrivateAccountDetailsByUUID(userDetails));
     }
 
     @PatchMapping("/edit")

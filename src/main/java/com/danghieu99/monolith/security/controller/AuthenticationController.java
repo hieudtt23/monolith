@@ -9,6 +9,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -33,21 +34,25 @@ public class AuthenticationController {
         return authenticationService.register(request);
     }
 
+    @PreAuthorize("isAuthenticated()")
     @PostMapping("/logout")
     public ResponseEntity<?> logout(HttpServletRequest request) {
         return authenticationService.logout(request);
     }
 
+    @PreAuthorize("isAuthenticated()")
     @PostMapping("/logout-all")
     public ResponseEntity<?> deleteAllTokens(@NotNull @AuthenticationPrincipal UserDetailsImpl userDetails) {
         return authenticationService.deleteAllTokens(userDetails);
     }
 
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/refresh")
     public ResponseEntity<?> refreshAuthentication(@NotNull @AuthenticationPrincipal UserDetailsImpl userDetails) {
         return authenticationService.refreshAuthentication(userDetails);
     }
 
+    @PreAuthorize("isAuthenticated()")
     @PostMapping("/confirm-email")
     public ResponseEntity<?> confirmEmail(@RequestBody @Valid ConfirmEmailRequest request) {
         return authenticationService.confirmEmail(request);

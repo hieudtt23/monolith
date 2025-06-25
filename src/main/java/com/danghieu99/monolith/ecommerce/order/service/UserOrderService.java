@@ -32,10 +32,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 @Service
 @RequiredArgsConstructor
@@ -60,6 +58,15 @@ public class UserOrderService {
             orderResponse.setItems(orderItemRepository.findByOrderId(order.getId()).stream().map(orderMapper::toOrderItemResponse).toList());
             return orderResponse;
         }).toList();
+    }
+
+    @Transactional
+    public Collection<PlaceOrderResponse> placeMultiple(@NotNull Collection<UserPlaceOrderRequest> requests, @NotNull UserDetailsImpl userDetails) {
+        Collection<PlaceOrderResponse> responses = new ConcurrentLinkedQueue<>();
+        requests.parallelStream().forEach(request -> {
+            responses.add(this.place(request, userDetails));
+        });
+        return responses;
     }
 
     @Transactional

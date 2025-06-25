@@ -7,7 +7,6 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -29,11 +28,6 @@ import java.util.Set;
 @Slf4j
 public class SendEmailService {
 
-    @Value("${spring.mail.from.address}")
-    private String fromAddress;
-    @Value("${spring.mail.from.name}")
-    private String fromName;
-
     private final JavaMailSender mailSender;
     private final TemplateEngine templateEngine;
 
@@ -44,7 +38,7 @@ public class SendEmailService {
     public void send(SendEmailKafkaRequest request) {
         try {
             MimeMessage mimeMessage = mailSender.createMimeMessage();
-            MimeMessageHelper helper = this.prepareMessage(mimeMessage, request, fromAddress, fromName);
+            MimeMessageHelper helper = this.prepareMessage(mimeMessage, request, request.getFromAddress(), request.getFromName());
             if (request.getTemplateName() != null && !request.getTemplateName().isBlank()) {
                 Context ctx = this.prepareContext(request);
                 String processedContent = templateEngine.process(request.getTemplateName(), ctx);

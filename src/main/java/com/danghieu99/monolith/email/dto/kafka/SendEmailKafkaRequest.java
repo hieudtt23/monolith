@@ -14,7 +14,9 @@ import java.util.Map;
 @Setter
 public class SendEmailKafkaRequest extends BaseKafkaRequest {
 
-    private String[] from;
+    private String fromAddress;
+
+    private String fromName;
 
     private String[] to;
 

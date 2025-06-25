@@ -19,8 +19,11 @@ import java.util.Map;
 @Builder
 public class SendEmailRequest extends BaseRequest {
 
-    @NotEmpty
-    private List<@NotBlank String> from;
+    @NotBlank
+    private String fromAddress;
+
+    @NotBlank
+    private String fromName;
 
     @NotEmpty
     private List<@NotBlank @Email String> to;

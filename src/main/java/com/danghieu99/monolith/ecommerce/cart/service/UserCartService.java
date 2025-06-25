@@ -4,7 +4,6 @@ import com.danghieu99.monolith.ecommerce.cart.dto.GetCartResponse;
 import com.danghieu99.monolith.ecommerce.cart.entity.Cart;
 import com.danghieu99.monolith.ecommerce.cart.mapper.CartMapper;
 import com.danghieu99.monolith.ecommerce.cart.repository.CartRepository;
-import com.danghieu99.monolith.common.exception.ResourceNotFoundException;
 import com.danghieu99.monolith.security.config.auth.UserDetailsImpl;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -26,7 +25,9 @@ public class UserCartService {
 
     public GetCartResponse getCart(@NotNull final UserDetailsImpl userDetails) {
         Cart cart = cartRepository.findByAccountUUID(userDetails.getUuid());
-        if (cart == null) throw new ResourceNotFoundException("Cart", "accountUUID", userDetails.getUuid());
+        if (cart == null) {
+            return null;
+        }
         return cartMapper.toGetCartResponse(cart);
     }
 
@@ -35,7 +36,6 @@ public class UserCartService {
                                 @NotBlank final String variantUUID,
                                 @NotNull final int quantity) {
         Cart cart = cartRepository.findByAccountUUID(userDetails.getUuid());
-        if (cart == null) throw new ResourceNotFoundException("Cart", "accountUUID", userDetails.getUuid());
         Map<String, Integer> items = new HashMap<>(cart.getItems());
         if (quantity <= 0) {
             items.remove(variantUUID);

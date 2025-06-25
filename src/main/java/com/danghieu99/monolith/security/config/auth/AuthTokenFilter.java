@@ -1,11 +1,10 @@
 package com.danghieu99.monolith.security.config.auth;
 
 import com.danghieu99.monolith.common.exception.ResourceNotFoundException;
-import com.danghieu99.monolith.security.constant.EAccountStatus;
 import com.danghieu99.monolith.security.entity.Account;
 import com.danghieu99.monolith.security.repository.jpa.AccountRepository;
+import com.danghieu99.monolith.security.repository.redis.RefreshTokenRepository;
 import com.danghieu99.monolith.security.service.auth.AuthTokenService;
-import com.danghieu99.monolith.security.service.auth.RefreshTokenService;
 import com.danghieu99.monolith.security.util.TokenUtil;
 import com.danghieu99.monolith.security.service.auth.UserDetailsServiceImpl;
 import io.jsonwebtoken.JwtException;
@@ -15,7 +14,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
-import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -40,7 +38,7 @@ public class AuthTokenFilter extends OncePerRequestFilter {
     private final UserDetailsServiceImpl userDetailsService;
     private final AuthTokenProperties authTokenProperties;
     private final AccountRepository accountRepository;
-    private final RefreshTokenService refreshTokenService;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     @Override
     protected void doFilterInternal(@NotNull HttpServletRequest request,
@@ -48,9 +46,7 @@ public class AuthTokenFilter extends OncePerRequestFilter {
                                     @NotNull FilterChain filterChain) throws ServletException, IOException {
         try {
             String access = TokenUtil.parseTokenFromCookies(request.getCookies(), authTokenProperties.getAccessTokenName());
-            if (access != null
-                    && !access.isEmpty()
-                    && authTokenService.isTokenValid(access)) {
+            if (access != null && !access.isEmpty() && authTokenService.isValid(access)) {
                 String accountUUID = authTokenService.parseClaimsFromToken(access).getSubject();
                 Account account = accountRepository.findByUuid(UUID.fromString(accountUUID))
                         .orElseThrow(() -> new ResourceNotFoundException("Account", "Uuid", accountUUID));
@@ -69,8 +65,8 @@ public class AuthTokenFilter extends OncePerRequestFilter {
             } else {
                 String refresh = TokenUtil.parseTokenFromCookies(request.getCookies(), authTokenProperties.getRefreshTokenName());
                 if (refresh != null && !refresh.isEmpty()
-                        && authTokenService.isTokenValid(refresh)
-                        && refreshTokenService.existsByValue(refresh)) {
+                        && authTokenService.isValid(refresh)
+                        && refreshTokenRepository.existsById(refresh)) {
                     UserDetailsImpl userDetails = authTokenService.getUserDetailsFromToken(refresh);
                     String newAccessToken = authTokenService.buildAccessToken(userDetails);
                     ResponseCookie cookie = ResponseCookie

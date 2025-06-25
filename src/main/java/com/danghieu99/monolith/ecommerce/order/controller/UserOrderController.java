@@ -6,12 +6,15 @@ import com.danghieu99.monolith.ecommerce.order.dto.request.UserUpdateOrderAddres
 import com.danghieu99.monolith.ecommerce.order.service.UserOrderService;
 import com.danghieu99.monolith.security.config.auth.UserDetailsImpl;
 import jakarta.transaction.Transactional;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Collection;
 
 @RestController
 @RequestMapping("/api/v1/user/order")
@@ -28,9 +31,16 @@ public class UserOrderController {
 
     @PostMapping("/place")
     @Transactional
-    public ResponseEntity<?> place(@RequestBody UserPlaceOrderRequest request,
-                                   @AuthenticationPrincipal @NotNull UserDetailsImpl userDetails) {
+    public ResponseEntity<?> placeMultiple(@RequestBody UserPlaceOrderRequest request,
+                                           @AuthenticationPrincipal @NotNull UserDetailsImpl userDetails) {
         return ResponseEntity.ok(userOrderService.place(request, userDetails));
+    }
+
+    @PostMapping("/place-multiple")
+    @Transactional
+    public ResponseEntity<?> placeMultiple(@RequestBody @NotEmpty Collection<UserPlaceOrderRequest> requests,
+                                           @AuthenticationPrincipal @NotNull UserDetailsImpl userDetails) {
+        return ResponseEntity.ok(userOrderService.placeMultiple(requests, userDetails));
     }
 
     @PostMapping("/cancel")

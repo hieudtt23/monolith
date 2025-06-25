@@ -16,8 +16,6 @@ import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
 
-import jakarta.servlet.http.HttpServletRequest;
-
 import java.time.Instant;
 import java.util.Date;
 import java.util.UUID;
@@ -73,7 +71,7 @@ public class AuthTokenService {
         return TokenUtil.parseTokenFromCookies(cookies, authTokenProperties.getRefreshTokenName());
     }
 
-    public boolean isTokenValid(String token) {
+    public boolean isValid(String token) {
         try {
             parseClaimsFromToken(token);
         } catch (JwtException e) {

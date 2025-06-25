@@ -26,13 +26,16 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -59,47 +62,51 @@ public class AuthenticationService {
     private final PasswordEncoder passwordEncoder;
     private final AccountRepository accountRepository;
     private final AccountRoleRepository accountRoleRepository;
-    private final RefreshTokenService refreshTokenService;
     private final ConfirmCodeService confirmCodeService;
     private final SendEmailToKafkaService sendEmailToKafkaService;
 
-    @Value("${authentication.email.from}")
-    private String fromEmail;
+    @Value("${authentication.email.fromAddress}")
+    private String emailFromAddress;
+
+    @Value("${authentication.email.fromName}")
+    private String emailFromName;
 
     @Transactional
     public ResponseEntity<?> authenticate(@NotNull final LoginRequest request) {
-        Authentication authentication = authenticationManager
-                .authenticate(new UsernamePasswordAuthenticationToken(request.getUsername(),
-                        request.getPassword())
-                );
-        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        Authentication currentAuth = SecurityContextHolder.getContext().getAuthentication();
+        if (currentAuth != null && currentAuth.isAuthenticated() && !(currentAuth instanceof AnonymousAuthenticationToken)) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("User already logged in");
+        }
+        Authentication newAuth = authenticationManager
+                .authenticate(new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
+        UserDetailsImpl userDetails = (UserDetailsImpl) newAuth.getPrincipal();
         Set<String> roles = userDetails.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toSet());
 
-        String refreshToken = authTokenService.buildRefreshToken(userDetails);
-        String accessToken = authTokenService.buildAccessToken(userDetails);
+        String refreshTokenValue = authTokenService.buildRefreshToken(userDetails);
+        String accessTokenValue = authTokenService.buildAccessToken(userDetails);
         ResponseCookie refreshTokenCookie = ResponseCookie
-                .from(authTokenProperties.getRefreshTokenName(), refreshToken)
+                .from(authTokenProperties.getRefreshTokenName(), refreshTokenValue)
                 .secure(true)
                 .httpOnly(true)
                 .sameSite("None")
                 .maxAge(TimeUnit.MILLISECONDS.toSeconds(authTokenProperties.getRefreshTokenExpireMs()))
                 .build();
         ResponseCookie accessTokenCookie = ResponseCookie
-                .from(authTokenProperties.getAccessTokenName(), accessToken)
+                .from(authTokenProperties.getAccessTokenName(), accessTokenValue)
                 .secure(true)
                 .httpOnly(true)
                 .sameSite("None")
                 .maxAge(TimeUnit.MILLISECONDS.toSeconds(authTokenProperties.getAccessTokenExpireMs()))
                 .build();
 
-        var saveToken = Token.builder()
+        Token refreshToken = Token.builder()
                 .accountUUID(userDetails.getUuid())
-                .value(refreshToken)
+                .value(refreshTokenValue)
                 .expiration(authTokenProperties.getRefreshTokenExpireMs())
                 .build();
-        refreshTokenRepository.save(saveToken);
+        refreshTokenRepository.save(refreshToken);
 
         HttpHeaders headers = new HttpHeaders();
         headers.add(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
@@ -134,11 +141,12 @@ public class AuthenticationService {
                 .build();
         accountRoleRepository.save(accountRole);
 
-        //use template
+        //add template
         String code = UUID.randomUUID().toString();
         confirmCodeService.save(savedAccount.getUuid().toString(), code, "email");
         sendEmailToKafkaService.send(SendEmailRequest.builder()
-                .from(List.of(fromEmail))
+                .fromAddress(emailFromAddress)
+                .fromName(emailFromName)
                 .to(List.of(request.getEmail()))
                 .subject("Email Confirmation Code")
                 .plainText(code)
@@ -153,23 +161,23 @@ public class AuthenticationService {
         return ResponseEntity.ok().body(responseBody);
     }
 
-    @PreAuthorize("isAuthenticated()")
     @Transactional
     public ResponseEntity<?> logout(@NotNull final HttpServletRequest request) {
         String refreshToken = authTokenService.parseRefreshTokenFromCookies(request.getCookies());
-        if (refreshToken != null
-                && !refreshToken.isEmpty()
-                && refreshTokenService.existsByValue(refreshToken)) {
-            refreshTokenService.deleteByValue(refreshToken);
+        if (refreshToken != null && !refreshToken.isEmpty() && refreshTokenRepository.existsById(refreshToken)) {
+            refreshTokenRepository.deleteById(refreshToken);
         }
-        LogoutResponseBody response = LogoutResponseBody
+        LogoutResponseBody logoutResponse = LogoutResponseBody
                 .builder()
                 .message("Logout success!")
                 .build();
-        return ResponseEntity.ok().body(response);
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.SET_COOKIE, null);
+        return ResponseEntity.ok()
+                .headers(headers)
+                .body(logoutResponse);
     }
 
-    @PreAuthorize("isAuthenticated()")
     @Transactional
     public ResponseEntity<?> deleteAllTokens(@NotNull final UserDetailsImpl userDetails) {
         refreshTokenRepository.deleteByAccountUUID(userDetails.getUuid());
@@ -179,7 +187,6 @@ public class AuthenticationService {
         return ResponseEntity.ok().body(response);
     }
 
-    @PreAuthorize("isAuthenticated()")
     @Transactional
     public ResponseEntity<?> refreshAuthentication(@NotNull final UserDetailsImpl userDetails) {
         String accessToken = authTokenService.buildAccessToken(userDetails);
