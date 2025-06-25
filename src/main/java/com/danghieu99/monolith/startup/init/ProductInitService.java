@@ -16,11 +16,10 @@ import com.danghieu99.monolith.ecommerce.product.repository.jpa.join.ProductShop
 import com.danghieu99.monolith.ecommerce.product.repository.jpa.join.VariantAttributeRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.lang3.RandomUtils;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.util.Random;
+import java.util.UUID;
 import java.util.stream.IntStream;
 
 @Service
@@ -38,47 +37,49 @@ public class ProductInitService {
     @Transactional
     public void init() {
         if (productRepository.findAll().isEmpty()) {
-            shopRepository.findAll().forEach(shop -> {
-                var savedProduct = productRepository.save(Product.builder()
-                        .name("Default product " + shop)
-                        .description("Default product description " + shop)
-                        .status(EProductStatus.LISTED)
-                        .basePrice(BigDecimal.valueOf(Math.random()))
-                        .build());
-                pShopRepository.save(ProductShop.builder()
-                        .productId(savedProduct.getId())
-                        .shopId(shop.getId())
-                        .build());
-
-                IntStream.range(1, 5).parallel().forEach(j -> {
-                    pCategoryRepository.save(pCategoryRepository.save(ProductCategory.builder()
-                            .productId(savedProduct.getId())
-                            .categoryId(j).build()));
-                });
-
-                IntStream.range(1, 5).parallel().forEach(k -> {
-                    var attribute = attributeRepository.save(Attribute.builder()
-                            .productId(savedProduct.getId())
-                            .type("Default type " + k)
-                            .value("Default value " + k)
+            shopRepository.findAll().parallelStream().forEach(shop -> {
+                IntStream.range(0, 10).parallel().forEach(i -> {
+                    var savedProduct = productRepository.save(Product.builder()
+                            .name("Default product " + UUID.randomUUID())
+                            .description("Default product description " + UUID.randomUUID())
+                            .status(EProductStatus.LISTED)
+                            .basePrice(BigDecimal.valueOf(200))
                             .build());
-
-                    IntStream.range(1, 5).parallel().forEach(j -> {
-                        var variant = variantRepository.save(Variant.builder()
-                                .stock(j)
-                                .price(BigDecimal.valueOf(j))
+                    pShopRepository.save(ProductShop.builder()
+                            .productId(savedProduct.getId())
+                            .shopId(shop.getId())
+                            .build());
+                    IntStream.range(0, 4).parallel().forEach(j -> {
+                        pCategoryRepository.save(ProductCategory.builder()
                                 .productId(savedProduct.getId())
+                                .categoryId(j).build());
+                    });
+
+                    IntStream.range(0, 3).parallel().forEach(k -> {
+                        var savedAttribute = attributeRepository.save(Attribute.builder()
+                                .productId(savedProduct.getId())
+                                .type("Default type " + UUID.randomUUID())
+                                .value("Default value " + UUID.randomUUID())
                                 .build());
 
-                        vAttributeRepository.save(vAttributeRepository.save(VariantAttribute.builder()
-                                .attributeId(attribute.getId())
-                                .variantId(variant.getId())
-                                .attributeType(attribute.getType())
-                                .build()));
+                        IntStream.range(1, 4).parallel().forEach(l -> {
+                            var savedVariant = variantRepository.save(Variant.builder()
+                                    .stock(l)
+                                    .price(BigDecimal.valueOf(300))
+                                    .productId(savedProduct.getId())
+                                    .build());
+
+                            IntStream.range(0, 3).parallel().forEach(m -> {
+                                vAttributeRepository.save(VariantAttribute.builder()
+                                        .attributeId(savedAttribute.getId())
+                                        .variantId(savedVariant.getId())
+                                        .attributeType(savedAttribute.getType())
+                                        .build());
+                            });
+                        });
                     });
                 });
             });
-
         }
     }
 }

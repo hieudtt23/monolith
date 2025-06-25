@@ -31,8 +31,7 @@ public class AccountInitService {
     public void init() {
         if (accountRepository.findAll().isEmpty()) {
             Set<AccountRole> accountRoles = new HashSet<>();
-
-            IntStream.range(1, 100).parallel().forEach(i -> {
+            IntStream.range(1, 10).parallel().forEach(i -> {
                 var adminAccount = Account.builder()
                         .username("admin" + i)
                         .password(passwordEncoder.encode("adminpassword" + i))
@@ -47,8 +46,7 @@ public class AccountInitService {
                         .roleId(roleRepository.findByRole(ERole.ROLE_ADMIN).get().getId())
                         .build());
             });
-
-            IntStream.range(1, 500).parallel().forEach(i -> {
+            IntStream.range(1, 100).parallel().forEach(i -> {
                 var userAccount = (Account.builder()
                         .username("user" + i)
                         .password(passwordEncoder.encode("userpassword" + i))
@@ -63,8 +61,7 @@ public class AccountInitService {
                         .roleId(roleRepository.findByRole(ERole.ROLE_USER).get().getId())
                         .build());
             });
-
-            IntStream.range(1, 200).parallel().forEach(i -> {
+            IntStream.range(1, 50).parallel().forEach(i -> {
                 var sellerAccount = Account.builder()
                         .username("seller" + i)
                         .password(passwordEncoder.encode("sellerpassword" + i))

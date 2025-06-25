@@ -29,7 +29,7 @@ public class ShopInitService {
                         .name("Default shop " + seller.getPhone())
                         .description("Default shop description " + seller.getPhone())
                         .accountUUID(seller.getUuid())
-                        .status(seller.getId() % 5 != 0 ? EShopStatus.SHOP_ACTIVE : EShopStatus.SHOP_INACTIVE)
+                        .status(seller.getId() % 10 != 0 ? EShopStatus.SHOP_ACTIVE : EShopStatus.SHOP_INACTIVE)
                         .build());
             });
             shopRepository.saveAll(shops);
