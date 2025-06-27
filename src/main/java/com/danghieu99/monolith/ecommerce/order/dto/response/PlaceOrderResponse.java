@@ -10,6 +10,7 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class PlaceOrderResponse extends BaseResponse {
 
     private List<OrderItemResponse> failed;

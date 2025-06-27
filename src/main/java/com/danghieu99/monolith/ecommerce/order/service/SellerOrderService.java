@@ -8,9 +8,12 @@ import com.danghieu99.monolith.ecommerce.order.dto.response.CancelOrderRequestDe
 import com.danghieu99.monolith.ecommerce.order.dto.response.OrderDetailsResponse;
 import com.danghieu99.monolith.ecommerce.order.entity.CancelRequest;
 import com.danghieu99.monolith.ecommerce.order.entity.Order;
+import com.danghieu99.monolith.ecommerce.order.entity.OrderItem;
 import com.danghieu99.monolith.ecommerce.order.mapper.OrderMapper;
 import com.danghieu99.monolith.ecommerce.order.repository.CancelRequestRepository;
+import com.danghieu99.monolith.ecommerce.order.repository.OrderItemRepository;
 import com.danghieu99.monolith.ecommerce.order.repository.OrderRepository;
+import com.danghieu99.monolith.ecommerce.product.repository.jpa.VariantRepository;
 import com.danghieu99.monolith.email.dto.SendEmailRequest;
 import com.danghieu99.monolith.email.repository.EmailTemplateRepository;
 import com.danghieu99.monolith.email.service.SendEmailToKafkaService;
@@ -25,6 +28,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -39,6 +43,8 @@ public class SellerOrderService {
     private final AccountRepository accountRepository;
     private final SendEmailToKafkaService sendEmailToKafkaService;
     private final EmailTemplateRepository emailTemplateRepository;
+    private final VariantRepository variantRepository;
+    private final OrderItemRepository orderItemRepository;
 
     public Page<OrderDetailsResponse> getAllOrdersByCurrentShop(@NotNull UserDetailsImpl userDetails,
                                                                 @NotNull Pageable pageable) {
@@ -65,16 +71,20 @@ public class SellerOrderService {
     public void processCancelRequest(@NotNull ProcessCancelRequestRequest request) {
         CancelRequest cancelRequest = cancelRequestRepository.findByUuid(UUID.fromString(request.getCancelRequestUUID()))
                 .orElseThrow(() -> new ResourceNotFoundException("CancelRequest", "uuid", request.getCancelRequestUUID()));
-        if (request.isAccept()) {
-            cancelRequestRepository.updateStatusByUuid(cancelRequest.getUuid(), ECancelStatus.ACCEPTED);
-            orderRepository.updateOrderStatusByUUID(cancelRequest.getUuid(), EOrderStatus.CANCELED);
-        } else {
-            cancelRequestRepository.updateStatusByUuid(cancelRequest.getUuid(), ECancelStatus.DENIED);
-        }
         Account account = accountRepository.findByUuid(cancelRequest.getUserAccountUUID())
                 .orElseThrow(() -> new ResourceNotFoundException("Account", "uuid", cancelRequest.getUserAccountUUID()));
         Order order = orderRepository.findById(cancelRequest.getOrderId())
                 .orElseThrow(() -> new ResourceNotFoundException("Order", "id", cancelRequest.getOrderId()));
+        Collection<OrderItem> orderItems = orderItemRepository.findByOrderId(order.getId());
+        if (request.isAccept()) {
+            cancelRequestRepository.updateStatusByUuid(cancelRequest.getUuid(), ECancelStatus.ACCEPTED);
+            orderRepository.updateOrderStatusByUUID(cancelRequest.getUuid(), EOrderStatus.CANCELED);
+            orderItems.forEach(orderItem -> {
+                variantRepository.incrementStockById(orderItem.getVariantId(), orderItem.getQuantity());
+            });
+        } else {
+            cancelRequestRepository.updateStatusByUuid(cancelRequest.getUuid(), ECancelStatus.DENIED);
+        }
         if (emailTemplateRepository.findByName("cancelOrder").isPresent()) {
             sendEmailToKafkaService.send(SendEmailRequest.builder()
                     .to(List.of(account.getEmail()))

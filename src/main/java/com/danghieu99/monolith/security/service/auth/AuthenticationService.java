@@ -6,7 +6,6 @@ import com.danghieu99.monolith.email.dto.SendEmailRequest;
 import com.danghieu99.monolith.email.service.SendEmailToKafkaService;
 import com.danghieu99.monolith.security.config.auth.AuthTokenProperties;
 import com.danghieu99.monolith.security.config.auth.UserDetailsImpl;
-import com.danghieu99.monolith.security.constant.EAccountStatus;
 import com.danghieu99.monolith.security.dto.auth.request.ConfirmEmailRequest;
 import com.danghieu99.monolith.security.dto.auth.request.LoginRequest;
 import com.danghieu99.monolith.security.dto.auth.request.SignupRequest;
@@ -34,7 +33,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -86,6 +84,12 @@ public class AuthenticationService {
 
         String refreshTokenValue = authTokenService.buildRefreshToken(userDetails);
         String accessTokenValue = authTokenService.buildAccessToken(userDetails);
+        Token refreshToken = Token.builder()
+                .accountUUID(userDetails.getUuid())
+                .value(refreshTokenValue)
+                .expiration(authTokenProperties.getRefreshTokenExpireMs())
+                .build();
+        refreshTokenRepository.save(refreshToken);
         ResponseCookie refreshTokenCookie = ResponseCookie
                 .from(authTokenProperties.getRefreshTokenName(), refreshTokenValue)
                 .secure(true)
@@ -100,14 +104,6 @@ public class AuthenticationService {
                 .sameSite("None")
                 .maxAge(TimeUnit.MILLISECONDS.toSeconds(authTokenProperties.getAccessTokenExpireMs()))
                 .build();
-
-        Token refreshToken = Token.builder()
-                .accountUUID(userDetails.getUuid())
-                .value(refreshTokenValue)
-                .expiration(authTokenProperties.getRefreshTokenExpireMs())
-                .build();
-        refreshTokenRepository.save(refreshToken);
-
         HttpHeaders headers = new HttpHeaders();
         headers.add(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
         headers.add(HttpHeaders.SET_COOKIE, accessTokenCookie.toString());
@@ -124,10 +120,10 @@ public class AuthenticationService {
 
     @Transactional
     public ResponseEntity<?> register(@NotNull final SignupRequest request) {
-        if (accountRepository.findByUsername(request.getUsername()).isPresent()) {
+        if (accountRepository.existsByUsername(request.getUsername())) {
             throw new EntityExistsException("Account", "username", request.getUsername());
         }
-        if (accountRepository.findByEmail(request.getEmail()).isPresent()) {
+        if (accountRepository.existsByEmail(request.getEmail())) {
             throw new EntityExistsException("Account", "email", request.getEmail());
         }
         Account account = accountMapper.toAccount(request);
@@ -157,6 +153,7 @@ public class AuthenticationService {
         SignupResponseBody responseBody = SignupResponseBody.builder()
                 .username(savedAccount.getUsername())
                 .roles(roles).message("Signup success!")
+                .message("Please confirm email")
                 .build();
         return ResponseEntity.ok().body(responseBody);
     }
@@ -206,7 +203,10 @@ public class AuthenticationService {
     @Transactional
     public ResponseEntity<ConfirmEmailResponse> confirmEmail(@NotNull final ConfirmEmailRequest request) {
         String accountUUID = confirmCodeService.validate(request.getCode());
-        accountRepository.updateAccountStatusByUUID(UUID.fromString(accountUUID), EAccountStatus.ACCOUNT_ACTIVE);
+        int update = accountRepository.updateAccountEmailConfirmedByUUID(UUID.fromString(accountUUID), true);
+        if (update == 0) {
+            throw new RuntimeException("Update failed!");
+        }
         return ResponseEntity.ok()
                 .body(ConfirmEmailResponse.builder()
                         .success(true)

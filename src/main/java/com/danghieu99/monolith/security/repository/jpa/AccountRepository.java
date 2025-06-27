@@ -30,6 +30,10 @@ public interface AccountRepository extends JpaRepository<Account, Integer> {
 
     Optional<Account> findByEmail(String email);
 
+    boolean existsByUsername(String username);
+
+    boolean existsByEmail(String email);
+
     @Query("select a from Account a " +
             "where a.email like concat('%', :email, '%')")
     List<Account> findByEmailContains(String email);
@@ -85,4 +89,11 @@ public interface AccountRepository extends JpaRepository<Account, Integer> {
     @Query("select a.email from Account a " +
             "where a.uuid = :uuid")
     String findEmailByAccountUUID(UUID uuid);
+
+    @Modifying
+    @Transactional
+    @Query("update Account a " +
+            "set a.emailConfirmed = :confirmed " +
+            "where a.uuid = :uuid")
+    int updateAccountEmailConfirmedByUUID(UUID uuid, boolean confirmed);
 }

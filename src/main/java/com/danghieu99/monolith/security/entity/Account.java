@@ -45,4 +45,10 @@ public class Account extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private EAccountStatus status = EAccountStatus.ACCOUNT_ACTIVE;
+
+    @Builder.Default
+    private boolean emailConfirmed = false;
+
+    @Builder.Default
+    private boolean phoneConfirmed = false;
 }

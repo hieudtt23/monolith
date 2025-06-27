@@ -62,4 +62,11 @@ public interface VariantRepository extends JpaRepository<Variant, Integer> {
             "set v.stock = v.stock + :quantity " +
             "where v.uuid = :variantUUID")
     int incrementStockByUUID(UUID variantUUID, int quantity);
+
+    @Transactional
+    @Modifying
+    @Query("update Variant v " +
+            "set v.stock = v.stock + :quantity " +
+            "where v.id = :id")
+    int incrementStockById(int id, int quantity);
 }

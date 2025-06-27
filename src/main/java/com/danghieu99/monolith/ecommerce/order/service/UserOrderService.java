@@ -77,14 +77,13 @@ public class UserOrderService {
                         .getId())
                 .userAccountUUID(UUID.fromString(userDetails.getUuid()))
                 .build());
-        orderAddressRepository.save(orderMapper.toOrderAddress(request.getAddress()));
         List<OrderItem> orderItems = new ArrayList<>();
         List<OrderItemResponse> failed = new ArrayList<>();
         request.getItems().forEach(requestItem -> {
             try {
                 int decrementStockResult = variantRepository.decrementStockIfAvailableByUUID(UUID.fromString(requestItem.getVariantUUID()), requestItem.getQuantity());
                 if (decrementStockResult == 0) {
-                    throw new ResourceNotAvailableException("Variant", "uuid", requestItem.getVariantUUID());
+                    throw new ResourceNotAvailableException("Variant", "stock", requestItem.getQuantity());
                 }
                 OrderItem newOrderItem = OrderItem.builder()
                         .orderId(savedOrder.getId())
@@ -104,8 +103,11 @@ public class UserOrderService {
         });
         var savedItems = orderItemRepository.saveAll(orderItems);
         if (savedItems.isEmpty()) {
-            throw new RuntimeException("No order items saved");
+            throw new RuntimeException("No Order Item Saved");
         }
+        OrderAddress orderAddress = orderMapper.toOrderAddress(request.getAddress());
+        orderAddress.setOrderId(savedOrder.getId());
+        orderAddressRepository.save(orderAddress);
         if (emailTemplateRepository.findByName("placeOrder").isPresent()) {
             sendEmailToKafkaService.send(SendEmailRequest.builder()
                     .to(List.of(accountRepository.findEmailByAccountUUID(UUID.fromString(userDetails.getUuid()))))
