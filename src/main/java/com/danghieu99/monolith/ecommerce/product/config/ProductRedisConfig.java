@@ -9,6 +9,7 @@ import org.springframework.data.redis.repository.configuration.EnableRedisReposi
 @Configuration
 @EnableRedisRepositories("com.danghieu99.monolith.ecommerce.product.repository.redis")
 public class ProductRedisConfig {
+
     @Bean
     public RedisCacheManager cacheManager(RedisConnectionFactory connectionFactory) {
         return RedisCacheManager.create(connectionFactory);

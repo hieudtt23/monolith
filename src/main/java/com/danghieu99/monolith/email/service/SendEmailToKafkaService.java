@@ -31,7 +31,7 @@ public class SendEmailToKafkaService {
     public void send(SendEmailRequest request) {
         SendEmailKafkaRequest kafkaRequest = emailMapper.toSendEmailKafkaRequest(request);
         if (request.getFiles() != null && !request.getFiles().isEmpty()) {
-            kafkaRequest.setAttachments(request.getFiles().parallelStream().map(file -> {
+            kafkaRequest.setFiles(request.getFiles().parallelStream().map(file -> {
                 String url = this.uploadAttachment(file);
                 return SendEmailKafkaRequestAttachment.builder()
                         .fileName(file.getName())

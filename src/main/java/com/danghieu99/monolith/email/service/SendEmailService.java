@@ -45,7 +45,7 @@ public class SendEmailService {
                 helper.setText(processedContent, true);
             } else {
                 if (request.getSubject() != null && !request.getSubject().isBlank()) {
-                    throw new IllegalArgumentException("Subject cannot be empty");
+                    helper.setSubject(request.getFromName() + " - " + " default subject");
                 }
                 mimeMessage.setSubject(request.getSubject());
                 String plainText = request.getPlainText();
@@ -65,7 +65,7 @@ public class SendEmailService {
                     throw new IllegalArgumentException("No plain text or html content provided");
                 }
             }
-            if (request.getAttachments() != null && !request.getAttachments().isEmpty()) {
+            if (request.getFiles() != null && !request.getFiles().isEmpty()) {
                 this.prepareAttachments(helper, request);
             }
             mailSender.send(mimeMessage);
@@ -104,7 +104,7 @@ public class SendEmailService {
 
     @Transactional
     protected void prepareAttachments(MimeMessageHelper helper, SendEmailKafkaRequest request) {
-        request.getAttachments().forEach((attachment) -> {
+        request.getFiles().forEach((attachment) -> {
             try (InputStream inputStream = URI.create(attachment.getFileUrl()).toURL().openStream()) {
                 helper.addAttachment(attachment.getFileName(),
                         new InputStreamResource(inputStream),

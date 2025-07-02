@@ -7,12 +7,12 @@ import lombok.*;
 
 import java.util.Map;
 
+@EqualsAndHashCode(callSuper = true)
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Getter
-@Setter
 @Builder(access = AccessLevel.PUBLIC)
-public class SaveVariantImageResponse extends BaseResponse {
+public class PostVariantImageResponse extends BaseResponse {
 
     //variantUUID:imageToken
     @NotEmpty

@@ -2,7 +2,7 @@ package com.danghieu99.monolith.ecommerce.product.controller.seller;
 
 import com.danghieu99.monolith.ecommerce.product.dto.request.SaveShopRequest;
 import com.danghieu99.monolith.ecommerce.product.dto.request.UpdateShopDetailsRequest;
-import com.danghieu99.monolith.ecommerce.product.dto.response.ShopDetailsResponse;
+import com.danghieu99.monolith.ecommerce.product.dto.response.GetShopDetailsResponse;
 import com.danghieu99.monolith.ecommerce.product.service.shop.SellerShopService;
 import com.danghieu99.monolith.security.config.auth.UserDetailsImpl;
 import jakarta.validation.constraints.NotNull;
@@ -21,8 +21,8 @@ public class SellerShopController {
     private final SellerShopService sellerShopService;
 
     @PostMapping("")
-    public ShopDetailsResponse create(@AuthenticationPrincipal @NotNull UserDetailsImpl userDetails,
-                                      @NotNull @RequestParam SaveShopRequest request) {
+    public GetShopDetailsResponse create(@AuthenticationPrincipal @NotNull UserDetailsImpl userDetails,
+                                         @NotNull @RequestParam SaveShopRequest request) {
         return sellerShopService.createCurrentUserShop(userDetails, request);
     }
 
@@ -33,8 +33,8 @@ public class SellerShopController {
     }
 
     @PatchMapping("")
-    public ShopDetailsResponse editDetails(@AuthenticationPrincipal @NotNull UserDetailsImpl userDetails,
-                                           UpdateShopDetailsRequest request) {
+    public GetShopDetailsResponse editDetails(@AuthenticationPrincipal @NotNull UserDetailsImpl userDetails,
+                                              UpdateShopDetailsRequest request) {
         return sellerShopService.editCurrentUserShopDetails(userDetails, request);
     }
 }

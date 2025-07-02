@@ -2,8 +2,8 @@ package com.danghieu99.monolith.ecommerce.product.service.product;
 
 import com.danghieu99.monolith.common.exception.ResourceNotFoundException;
 import com.danghieu99.monolith.ecommerce.product.dto.request.SaveVariantImageRequest;
-import com.danghieu99.monolith.ecommerce.product.dto.response.SaveImagesResponse;
-import com.danghieu99.monolith.ecommerce.product.dto.response.SaveVariantImageResponse;
+import com.danghieu99.monolith.ecommerce.product.dto.response.PostImagesResponse;
+import com.danghieu99.monolith.ecommerce.product.dto.response.PostVariantImageResponse;
 import com.danghieu99.monolith.ecommerce.product.entity.jpa.Image;
 import com.danghieu99.monolith.ecommerce.product.entity.jpa.Product;
 import com.danghieu99.monolith.ecommerce.product.entity.jpa.Variant;
@@ -55,7 +55,7 @@ public class SellerProductImageService {
     }
 
     @Transactional
-    public SaveImagesResponse uploadAndSaveProductImages(@NotBlank final String productUUID,
+    public PostImagesResponse uploadAndSaveProductImages(@NotBlank final String productUUID,
                                                          @Size(min = 1, max = 10) final List<@NotNull MultipartFile> imgFiles) {
         Product product = productRepository.findByUuid(UUID.fromString(productUUID))
                 .orElseThrow(() -> new ResourceNotFoundException("Product", "uuid", productUUID));
@@ -86,7 +86,7 @@ public class SellerProductImageService {
                 log.error("ProductUUID: {}, file: {} upload failed", productUUID, file.getName(), e);
             }
         });
-        SaveImagesResponse response = new SaveImagesResponse();
+        PostImagesResponse response = new PostImagesResponse();
         if (!images.isEmpty() && !productImages.isEmpty()) {
             imageRepository.saveAll(images);
             productImageRepository.saveAll(productImages);
@@ -135,7 +135,7 @@ public class SellerProductImageService {
     }
 
     @Transactional
-    public SaveVariantImageResponse saveVariantImage(@NotEmpty final List<@NotNull SaveVariantImageRequest> requests) {
+    public PostVariantImageResponse saveVariantImage(@NotEmpty final List<@NotNull SaveVariantImageRequest> requests) {
         Map<String, String> failedMap = new HashMap<>();
         List<VariantImage> variantImages = new ArrayList<>();
         requests.forEach((request) -> {
@@ -161,7 +161,7 @@ public class SellerProductImageService {
         if (!variantImages.isEmpty()) {
             variantImageRepository.saveAll(variantImages);
         }
-        return SaveVariantImageResponse.builder()
+        return PostVariantImageResponse.builder()
                 .failedMap(failedMap)
                 .build();
     }

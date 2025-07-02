@@ -14,11 +14,12 @@ import java.util.concurrent.TimeUnit;
 public class RecentView {
 
     @Builder
-    public RecentView(String accountUUID, String productUUID, long timestamp) {
+    public RecentView(String accountUUID, String productUUID, long timestamp, int ttlDays) {
         this.id = accountUUID + ":" + productUUID;
         this.accountUUID = accountUUID;
         this.productUUID = productUUID;
         this.timestamp = timestamp;
+        this.ttlDays = ttlDays;
     }
 
     @Id
@@ -34,5 +35,5 @@ public class RecentView {
     private final long timestamp;
 
     @TimeToLive(unit = TimeUnit.DAYS)
-    private final int ttlDays = 14;
+    private final int ttlDays;
 }

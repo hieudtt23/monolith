@@ -2,7 +2,7 @@ package com.danghieu99.monolith.ecommerce.product.service.category;
 
 import com.danghieu99.monolith.common.exception.ResourceNotFoundException;
 import com.danghieu99.monolith.ecommerce.product.dto.request.SaveCategoryRequest;
-import com.danghieu99.monolith.ecommerce.product.dto.response.CategoryResponse;
+import com.danghieu99.monolith.ecommerce.product.dto.response.GetCategoryResponse;
 import com.danghieu99.monolith.ecommerce.product.entity.jpa.Category;
 import com.danghieu99.monolith.ecommerce.product.mapper.CategoryMapper;
 import com.danghieu99.monolith.ecommerce.product.repository.jpa.CategoryRepository;
@@ -33,13 +33,13 @@ public class AdminCategoryService {
         productCategoryRepository.deleteByCategoryId(id);
     }
 
-    public CategoryResponse getById(@NotNull int id) {
+    public GetCategoryResponse getById(@NotNull int id) {
         return categoryMapper.toResponse(categoryRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Category", "id", id)));
     }
 
     @Transactional
-    public CategoryResponse updateById(@NotNull final int id, @NotNull final SaveCategoryRequest request) {
+    public GetCategoryResponse updateById(@NotNull final int id, @NotNull final SaveCategoryRequest request) {
         Category current = categoryRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Category", "id", id));
         if (request.getName() != null) {

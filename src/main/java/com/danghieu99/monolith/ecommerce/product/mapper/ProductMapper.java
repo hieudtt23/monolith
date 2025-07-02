@@ -1,8 +1,8 @@
 package com.danghieu99.monolith.ecommerce.product.mapper;
 
 import com.danghieu99.monolith.ecommerce.product.dto.request.SaveProductRequest;
-import com.danghieu99.monolith.ecommerce.product.dto.response.ProductDetailsResponse;
-import com.danghieu99.monolith.ecommerce.product.dto.response.ProductResponse;
+import com.danghieu99.monolith.ecommerce.product.dto.response.GetProductDetailsResponse;
+import com.danghieu99.monolith.ecommerce.product.dto.response.GetProductResponse;
 import com.danghieu99.monolith.ecommerce.product.entity.jpa.Product;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -21,8 +21,8 @@ public interface ProductMapper {
             @Mapping(target = "variants", ignore = true),
             @Mapping(target = "imageTokens", ignore = true),
             @Mapping(target = "uuid", ignore = true),})
-    ProductDetailsResponse toGetProductDetailsResponse(Product product);
+    GetProductDetailsResponse toGetProductDetailsResponse(Product product);
 
     @Mapping(target = "imageToken", ignore = true)
-    ProductResponse toProductResponse(Product product);
+    GetProductResponse toProductResponse(Product product);
 }

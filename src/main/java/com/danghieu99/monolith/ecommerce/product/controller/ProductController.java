@@ -1,8 +1,11 @@
 package com.danghieu99.monolith.ecommerce.product.controller;
 
+import com.danghieu99.monolith.ecommerce.product.dto.request.PostReviewRequest;
 import com.danghieu99.monolith.ecommerce.product.service.product.ProductService;
+import com.danghieu99.monolith.ecommerce.product.service.review.ReviewService;
 import com.danghieu99.monolith.security.config.auth.UserDetailsImpl;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
@@ -10,6 +13,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -23,6 +27,7 @@ import java.util.List;
 public class ProductController {
 
     private final ProductService productService;
+    private final ReviewService reviewService;
 
     @GetMapping("")
     public Page<?> getAll(@ParameterObject Pageable pageable) {
@@ -55,8 +60,20 @@ public class ProductController {
     }
 
     @GetMapping("/recent")
-    public ResponseEntity<?> getRecentlyViewed(@AuthenticationPrincipal UserDetailsImpl userDetails,
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> getRecentlyViewed(@NotNull @AuthenticationPrincipal UserDetailsImpl userDetails,
                                                @PageableDefault(sort = "timestamp", direction = Sort.Direction.DESC) Pageable pageable) {
         return ResponseEntity.ok(productService.getRecentlyViewedByAccountUUID(userDetails.getUuid(), pageable));
+    }
+
+    @PostMapping("/review")
+    @PreAuthorize("isAuthenticated")
+    public ResponseEntity<?> postReview(@NotNull PostReviewRequest request) {
+        return ResponseEntity.ok(reviewService.post(request));
+    }
+
+    @GetMapping("/reviews")
+    public ResponseEntity<?> getReviews(@NotBlank String productUUID, Pageable pageable) {
+        return ResponseEntity.ok(reviewService.getReviewsByProductUUID(productUUID, pageable));
     }
 }

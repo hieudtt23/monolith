@@ -1,7 +1,7 @@
 package com.danghieu99.monolith.ecommerce.product.controller.seller;
 
 import com.danghieu99.monolith.ecommerce.product.dto.request.SaveVariantRequest;
-import com.danghieu99.monolith.ecommerce.product.dto.response.VariantDetailsResponse;
+import com.danghieu99.monolith.ecommerce.product.dto.response.GetVariantDetailsResponse;
 import com.danghieu99.monolith.ecommerce.product.service.product.SellerProductService;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -22,8 +22,8 @@ public class SellerVariantController {
     private final SellerProductService sellerProductService;
 
     @GetMapping("")
-    public Page<VariantDetailsResponse> getVariantsByProductUUID(@RequestParam @NotBlank String productUUID,
-                                                                 @RequestParam @PageableDefault Pageable pageable) {
+    public Page<GetVariantDetailsResponse> getVariantsByProductUUID(@RequestParam @NotBlank String productUUID,
+                                                                    @RequestParam @PageableDefault Pageable pageable) {
         return sellerProductService.getVariantsByProductUUID(productUUID, pageable);
     }
 

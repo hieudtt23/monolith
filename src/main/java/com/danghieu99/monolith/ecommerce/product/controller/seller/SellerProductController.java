@@ -3,7 +3,7 @@ package com.danghieu99.monolith.ecommerce.product.controller.seller;
 import com.danghieu99.monolith.ecommerce.product.dto.request.SaveProductRequest;
 import com.danghieu99.monolith.ecommerce.product.dto.request.SaveVariantImageRequest;
 import com.danghieu99.monolith.ecommerce.product.dto.request.UpdateProductDetailsRequest;
-import com.danghieu99.monolith.ecommerce.product.dto.response.ProductDetailsResponse;
+import com.danghieu99.monolith.ecommerce.product.dto.response.GetProductDetailsResponse;
 import com.danghieu99.monolith.ecommerce.product.service.product.SellerProductImageService;
 import com.danghieu99.monolith.ecommerce.product.service.product.SellerProductService;
 import com.danghieu99.monolith.security.config.auth.UserDetailsImpl;
@@ -34,8 +34,8 @@ public class SellerProductController {
     private final SellerProductImageService sellerProductImageService;
 
     @GetMapping("")
-    public Page<ProductDetailsResponse> getAllByCurrentShop(@AuthenticationPrincipal @NotNull UserDetailsImpl userDetails,
-                                                            @PageableDefault Pageable pageable) {
+    public Page<GetProductDetailsResponse> getAllByCurrentShop(@AuthenticationPrincipal @NotNull UserDetailsImpl userDetails,
+                                                               @PageableDefault Pageable pageable) {
         return sellerProductService.getAllByCurrentShop(userDetails, pageable);
     }
 

@@ -4,8 +4,8 @@ import com.danghieu99.monolith.common.exception.ResourceNotFoundException;
 import com.danghieu99.monolith.ecommerce.product.dto.request.SaveProductRequest;
 import com.danghieu99.monolith.ecommerce.product.dto.request.SaveVariantRequest;
 import com.danghieu99.monolith.ecommerce.product.dto.request.UpdateProductDetailsRequest;
-import com.danghieu99.monolith.ecommerce.product.dto.response.VariantDetailsResponse;
-import com.danghieu99.monolith.ecommerce.product.dto.response.ProductDetailsResponse;
+import com.danghieu99.monolith.ecommerce.product.dto.response.GetVariantDetailsResponse;
+import com.danghieu99.monolith.ecommerce.product.dto.response.GetProductDetailsResponse;
 import com.danghieu99.monolith.ecommerce.product.entity.jpa.Attribute;
 import com.danghieu99.monolith.ecommerce.product.entity.jpa.Product;
 import com.danghieu99.monolith.ecommerce.product.entity.jpa.Variant;
@@ -47,7 +47,7 @@ public class SellerProductService {
     private final CategoryRepository categoryRepository;
     private final AttributeRepository attributeRepository;
 
-    public Page<ProductDetailsResponse> getAllByCurrentShop(@NotNull UserDetailsImpl userDetails, @NotNull Pageable pageable) {
+    public Page<GetProductDetailsResponse> getAllByCurrentShop(@NotNull UserDetailsImpl userDetails, @NotNull Pageable pageable) {
         Page<Product> products = productRepository.findByShopUUID(UUID.fromString(userDetails.getUuid()), pageable);
         return products.map(productMapper::toGetProductDetailsResponse);
     }
@@ -97,7 +97,7 @@ public class SellerProductService {
     }
 
     @Transactional
-    public Page<VariantDetailsResponse> getVariantsByProductUUID(@NotBlank String productUUID, @NotNull Pageable pageable) {
+    public Page<GetVariantDetailsResponse> getVariantsByProductUUID(@NotBlank String productUUID, @NotNull Pageable pageable) {
         return variantRepository.findByProductUuid(UUID.fromString(productUUID), pageable).map(variantMapper::toResponse);
     }
 

@@ -34,5 +34,5 @@ public class SendEmailKafkaRequest extends BaseKafkaRequest {
 
     private Map<String, String> templateParams;
 
-    private List<SendEmailKafkaRequestAttachment> attachments;
+    private List<SendEmailKafkaRequestAttachment> files;
 }

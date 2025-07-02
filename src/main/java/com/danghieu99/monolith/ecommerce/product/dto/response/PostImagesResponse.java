@@ -1,5 +1,6 @@
 package com.danghieu99.monolith.ecommerce.product.dto.response;
 
+import com.danghieu99.monolith.common.dto.BaseResponse;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
@@ -8,7 +9,7 @@ import lombok.*;
 @Getter
 @Setter
 @Builder(access = AccessLevel.PUBLIC)
-public class SaveImagesResponse {
+public class PostImagesResponse extends BaseResponse {
 
     @NotNull
     private boolean success;

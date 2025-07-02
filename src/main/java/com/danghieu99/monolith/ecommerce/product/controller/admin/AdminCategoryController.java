@@ -1,7 +1,7 @@
 package com.danghieu99.monolith.ecommerce.product.controller.admin;
 
 import com.danghieu99.monolith.ecommerce.product.dto.request.SaveCategoryRequest;
-import com.danghieu99.monolith.ecommerce.product.dto.response.CategoryResponse;
+import com.danghieu99.monolith.ecommerce.product.dto.response.GetCategoryResponse;
 import com.danghieu99.monolith.ecommerce.product.mapper.CategoryMapper;
 import com.danghieu99.monolith.ecommerce.product.service.category.AdminCategoryService;
 import jakarta.validation.constraints.NotNull;
@@ -19,7 +19,7 @@ public class AdminCategoryController {
     private final CategoryMapper categoryMapper;
 
     @PostMapping("")
-    public CategoryResponse create(@NotNull @RequestBody SaveCategoryRequest category) {
+    public GetCategoryResponse create(@NotNull @RequestBody SaveCategoryRequest category) {
         return categoryMapper.toResponse(adminCategoryService.save(category));
     }
 
@@ -29,12 +29,12 @@ public class AdminCategoryController {
     }
 
     @GetMapping
-    public CategoryResponse getById(@NotNull @RequestParam int id) {
+    public GetCategoryResponse getById(@NotNull @RequestParam int id) {
         return adminCategoryService.getById(id);
     }
 
     @PatchMapping("")
-    public CategoryResponse updateById(@RequestParam @NotNull int id, @RequestBody @NotNull SaveCategoryRequest request) {
+    public GetCategoryResponse updateById(@RequestParam @NotNull int id, @RequestBody @NotNull SaveCategoryRequest request) {
         return adminCategoryService.updateById(id, request);
     }
 }

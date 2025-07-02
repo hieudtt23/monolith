@@ -1,6 +1,6 @@
 package com.danghieu99.monolith.ecommerce.product.controller;
 
-import com.danghieu99.monolith.ecommerce.product.dto.response.ShopDetailsResponse;
+import com.danghieu99.monolith.ecommerce.product.dto.response.GetShopDetailsResponse;
 import com.danghieu99.monolith.ecommerce.product.service.shop.ShopService;
 import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
@@ -22,17 +22,17 @@ public class ShopController {
     private final ShopService shopService;
 
     @GetMapping("/uuid")
-    public ShopDetailsResponse getByUUID(@RequestParam @NotBlank String uuid) {
+    public GetShopDetailsResponse getByUUID(@RequestParam @NotBlank String uuid) {
         return shopService.getByUUID(uuid);
     }
 
     @GetMapping("/name")
-    public ShopDetailsResponse getByName(@RequestParam @NotBlank String name) {
+    public GetShopDetailsResponse getByName(@RequestParam @NotBlank String name) {
         return shopService.getByName(name);
     }
 
     @GetMapping("/search-name")
-    public Page<ShopDetailsResponse> getByNameContainingIgnoreCase(@RequestParam @NotBlank String name, @RequestParam @PageableDefault Pageable pageable) {
+    public Page<GetShopDetailsResponse> getByNameContainingIgnoreCase(@RequestParam @NotBlank String name, @RequestParam @PageableDefault Pageable pageable) {
         return shopService.getByNameContaining(name, pageable);
     }
 }
